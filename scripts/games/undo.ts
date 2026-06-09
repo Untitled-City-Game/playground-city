@@ -1,4 +1,4 @@
-import { MoveContext, GameStateUniversal } from "@/scripts/types/types";
+import { MoveContext, GameStateUniversal, GameStateLog, GameStateAnything } from "@/scripts/types/types";
 
 export default function customUndoTemplate<T extends GameStateUniversal>(context: MoveContext<T>): T | "INVALID_MOVE" {
 	console.log("custom undo activated");
@@ -12,13 +12,19 @@ export default function customUndoTemplate<T extends GameStateUniversal>(context
 	if(!lastState){
 		throw new Error("Type of laststate was not expected");
 	}
+	// Spread the live G first so static fields excluded from the snapshot
+	// (MatchMapData, challengeDeck — see createUndoPoint) are preserved, then
+	// overlay the saved mutable state and trim the log.
 	return {
-		gameStateLogs: G.gameStateLogs.slice(0,-1),
+		...G,
 		...lastState,
+		gameStateLogs: G.gameStateLogs.slice(0,-1),
 	} as T
 }
 
 export function createUndoPoint<GameState extends GameStateUniversal>(G: GameState){
-	const {gameStateLogs, ...rest} = G;
-	G.gameStateLogs.push(rest);
+	// Exclude gameStateLogs (avoids nesting) and the static-after-setup fields,
+	// which are restored from the live state on undo rather than copied here.
+	const { gameStateLogs, MatchMapData, challengeDeck, ...rest } = G as GameStateAnything;
+	G.gameStateLogs.push(rest as GameStateLog<GameState>);
 }

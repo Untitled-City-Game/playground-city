@@ -33,7 +33,12 @@ export interface GameStateAnything extends GameStateUniversal, Partial<Omit<Game
 export type MoveContext<SomeGameState extends GameStateUniversal> = DefaultPluginAPIs & { G: SomeGameState; ctx: Ctx; playerID: string };
 
 
-export type GameStateLog<GameState extends GameStateUniversal> = Omit<GameState, "gameStateLogs">
+// Undo snapshots stored in gameStateLogs. We omit gameStateLogs itself (no
+// nesting) plus fields that are fixed at setup() and never change during play
+// (MatchMapData, challengeDeck) — those are restored from the live state on
+// undo instead of being copied into every snapshot. Omit ignores keys that a
+// given game state doesn't have (e.g. Snake has no MatchMapData).
+export type GameStateLog<GameState extends GameStateUniversal> = Omit<GameState, "gameStateLogs" | "MatchMapData" | "challengeDeck">
 
 export type AllPlayersData = {
 	[key:string] : PlayerData

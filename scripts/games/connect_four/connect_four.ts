@@ -33,6 +33,10 @@ export type ConnectFourMoves = StripContext<typeof claimStateMoves>;
 
 export const ConnectFour: Game<ConnectFourGameState> = {
 	name: `connect_four`,
+	// We implement our own undo via the customUndo move + gameStateLogs, so the
+	// engine's built-in undo stack is dead weight (it snapshots full G on every
+	// move, dominating the persisted match size). Disable it.
+	disableUndo: true,
 	//set up game board using map json info
 	// validateSetupData: (data) => isGameSetupData(data),
 	setup: ({ ctx }, setupData : ConnectFourGameSetupData) => ConnectFourGameSetup(ctx, setupData),
