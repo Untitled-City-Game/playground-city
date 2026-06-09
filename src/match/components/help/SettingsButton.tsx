@@ -4,7 +4,7 @@ import { GameContext } from "@/src/match/Board";
 import { GameInviteButton } from "@/src/match/screens/game_status/Waiting";
 import ConfirmButton from "@/src/userInterface/ConfirmModal";
 import P from "@/src/userInterface/P";
-import { Center, Group, Modal, Stack, UnstyledButton } from "@mantine/core";
+import { Anchor, Center, Group, Modal, Stack, UnstyledButton } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useContext } from "react";
 import { BsFillGearFill } from "react-icons/bs";
@@ -59,6 +59,11 @@ export function SettingsModal({
 				</ConfirmButton>
 				: null}
 			{props.playerData.data.admin ? <ConfirmButton action={handleEndGame} description="end the game">End Game</ConfirmButton> : null}
+			{process.env.BUG_REPORT ?
+				<Anchor href={process.env.BUG_REPORT} target="_blank" rel="noopener noreferrer" size="sm" c="dimmed">
+					Report a bug
+				</Anchor>
+				: null}
 				</Stack>
 		</Modal>
 	);
