@@ -55,15 +55,28 @@ async function buildServer() {
 
     locationIO.on('connection', (socket) => {
         console.log('a user connected');
+        let joinedMatch: string | undefined;
+
+        // Clients join a room named after their matchID so location updates
+        // are only delivered to players in the same match.
+        socket.on("joinMatch", (matchID: string) => {
+            if (!matchID) return;
+            if (joinedMatch && joinedMatch !== matchID) {
+                socket.leave(joinedMatch);
+            }
+            joinedMatch = matchID;
+            socket.join(matchID);
+            console.log(`socket ${socket.id} joined match ${matchID}`);
+        });
+
         socket.on('disconnect', () => {
             console.log('user disconnected');
         });
-        socket.on("foo", (body) => {
-            console.log("someone said foo " + body);
-            locationIO.emit("foo", body);
-        });
+
         socket.on("locationUpdate", (body) => {
-            socket.broadcast.emit("locationUpdate", body);
+            if (!body || !body.matchID) return;
+            // Send only to other players in the same match (excludes sender).
+            socket.to(body.matchID).emit("locationUpdate", body);
         });
     });
 }

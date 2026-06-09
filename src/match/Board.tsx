@@ -76,7 +76,7 @@ function Board(props: GameBoardContext) {
         <GameContext.Provider value={contextValue}>
             <ErrorBoundary
                 FallbackComponent={ErrorDialog}>
-                <OtherTeamsContextWrapper>
+                <OtherTeamsContextWrapper matchID={props.matchID}>
                     <LocationRefContextWrapper>
                         <MatchContext G={props.G}>
                             <MatchGameplay G={props.G} playerData={props.playerData.data} />
@@ -159,8 +159,8 @@ function SnakeGameplay(G: SnakeGameState, playerData: PlayerData) {
 
 export const OtherTeamsContext = createContext<LocationData[]>([])
 
-function OtherTeamsContextWrapper({ children }: { children: React.ReactNode }) {
-    const data = useTeamLocations()
+function OtherTeamsContextWrapper({ children, matchID }: { children: React.ReactNode, matchID: string }) {
+    const data = useTeamLocations(matchID)
     return (
         <OtherTeamsContext.Provider value={data}>
             {children}

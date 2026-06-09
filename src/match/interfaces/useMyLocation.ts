@@ -43,7 +43,7 @@ export default function useMyLocation(initialPosition?: google.maps.LatLngLitera
 	return { position, accuracy, time, invalid }
 }
 
-export function useAndBroadcastMyLocation(teamName: MatchTeamColor, playerID: string, initialPosition?: google.maps.LatLngLiteral) {
+export function useAndBroadcastMyLocation(teamName: MatchTeamColor, playerID: string, matchID: string, initialPosition?: google.maps.LatLngLiteral) {
 	const [position, setPosition] = useState(initialPosition || { lat: 0, lng: 0 });
 	const [accuracy, setAccuracy] = useState<number>(9999)
 	const [invalid, setInvalid] = useState(true)
@@ -84,6 +84,7 @@ export function useAndBroadcastMyLocation(teamName: MatchTeamColor, playerID: st
 
 	function generateLocationData(): LocationData | null {
 		const location_data = {
+			matchID,
 			teamName,
 			playerID,
 			location: position,

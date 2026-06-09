@@ -127,6 +127,7 @@ export type LocationResult = {
 }
 
 export type LocationData = {
+	matchID: string,
 	teamName: MatchTeamColor,
 	playerID: string,
 	timestamp: number,

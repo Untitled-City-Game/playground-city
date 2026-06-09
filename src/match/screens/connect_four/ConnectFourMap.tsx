@@ -14,7 +14,7 @@ import { Polygon } from "@/src/match/googleMaps/shapes/Polygon";
 const DEBUG = false
 
 export default function ConnectFourMapTab() {
-    const { playerData } = useContext(GameContext)
+    const { playerData, matchID } = useContext(GameContext)
     const G = useContext(ConnectFourContext);
     const [currentZone, setCurrentZone] = useState<ZoneData>();
     const [activeLine, setActiveLine] = useState<LineData | undefined>()
@@ -87,7 +87,7 @@ export default function ConnectFourMapTab() {
                         zIndex={-1}
                     />
                     <>{zoneElements}</>
-                    <MyLocationMarker color={playerData.data.teamColor} defaultLocation={gameLocationCenters[G.city]} playerID={playerData.data.playerID} broadcast={true} />
+                    <MyLocationMarker color={playerData.data.teamColor} defaultLocation={gameLocationCenters[G.city]} matchID={matchID} playerID={playerData.data.playerID} broadcast={true} />
                     <AllTeamMarkers teamName={playerData.data.teamColor} />
                 </VisGlMapElement>
             </div>
