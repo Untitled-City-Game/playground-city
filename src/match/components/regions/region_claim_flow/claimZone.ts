@@ -1,5 +1,6 @@
 import { storage } from "@/scripts/firebase";
 import { ConnectFourMoves } from "@/scripts/games/connect_four/connect_four";
+import resizeImage from "@/src/match/components/regions/region_claim_flow/resizeImage";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 
 const DEBUG = true
@@ -48,8 +49,9 @@ export async function uploadEvidence(evidence: File[], playerId: string) {
 	return evidenceUrls;
 }
 
-async function uploadImage(image: File, playerId: string, index:number) {
-	DEBUG && console.log("image name", image.name, "playerid", playerId, "time", Date.now(), "index", index)
+async function uploadImage(original: File, playerId: string, index:number) {
+	const image = await resizeImage(original);
+	DEBUG && console.log("image name", image.name, "size", original.size, "->", image.size, "playerid", playerId, "time", Date.now(), "index", index)
 	const imageRef = ref(
 		storage,
 		`images/player${playerId}${Date.now()}${index}.${image.name.split('.').pop()}`
