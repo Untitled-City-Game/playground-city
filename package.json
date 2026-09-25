@@ -34,6 +34,7 @@
 		"firebase": "^11.5.0",
 		"load-esm": "^1.0.3",
 		"lodash": "^4.17.21",
+		"mediabunny": "^1.59.1",
 		"node-persist": "^4.0.4",
 		"point-in-polygon": "^1.1.0",
 		"polylabel": "^2.0.1",
