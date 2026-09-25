@@ -12,14 +12,18 @@ export default function customUndoTemplate<T extends GameStateUniversal>(context
 	if(!lastState){
 		throw new Error("Type of laststate was not expected");
 	}
-	// Spread the live G first so static fields excluded from the snapshot
-	// (MatchMapData, challengeDeck — see createUndoPoint) are preserved, then
-	// overlay the saved mutable state and trim the log.
+	// Rebuild from the snapshot, carrying over only the static fields it
+	// excludes (MatchMapData, challengeDeck — see createUndoPoint). Spreading
+	// the live G underneath would leak fields the snapshot lacks: optional
+	// fields that were unset at snapshot time (e.g. victory) are absent from
+	// it, so they would survive the undo.
+	const { MatchMapData, challengeDeck } = G as GameStateAnything;
 	return {
-		...G,
 		...lastState,
+		...(MatchMapData !== undefined && { MatchMapData }),
+		...(challengeDeck !== undefined && { challengeDeck }),
 		gameStateLogs: G.gameStateLogs.slice(0,-1),
-	} as T
+	} as unknown as T
 }
 
 export function createUndoPoint<GameState extends GameStateUniversal>(G: GameState){

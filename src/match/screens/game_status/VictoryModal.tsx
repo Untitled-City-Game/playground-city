@@ -14,6 +14,9 @@ export default function VictoryModal(){
 		// A win by another team is shown as part of OtherTeamClaimModal instead.
 		if(GameState.G.victory !== undefined && GameState.G.victory === myTeam){
 			open()
+		} else if (GameState.G.victory === undefined) {
+			// Victory was undone; reset so a later win doesn't reopen a stale modal.
+			close()
 		}
 	}, [GameState.G.victory])
 	if (!GameState.G.victory) return null;
