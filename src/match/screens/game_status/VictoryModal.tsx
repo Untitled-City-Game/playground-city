@@ -1,30 +1,43 @@
+import { MatchTeamColor } from "@/scripts/types/types";
 import { GameContext } from "@/src/match/Board";
+import TeamColorModal from "@/src/match/screens/game_status/TeamColorModal";
 import Span from "@/src/userInterface/Span";
 import TeamAvatar from "@/src/userInterface/TeamAvatar";
-import { Modal } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useContext, useEffect } from "react";
 
 export default function VictoryModal(){
 	const GameState = useContext(GameContext);
+	const myTeam = GameState.playerData.data.teamColor;
 	const [opened, { open, close }] = useDisclosure(GameState.G.victory !== undefined);
 	useEffect(()=> {
-		if(GameState.G.victory !== undefined){
+		// A win by another team is shown as part of OtherTeamClaimModal instead.
+		if(GameState.G.victory !== undefined && GameState.G.victory === myTeam){
 			open()
 		}
 	}, [GameState.G.victory])
+	if (!GameState.G.victory) return null;
 	return (
-		<Modal opened={opened} onClose={close} title="Winner!">
-			{GameState.G.victory ? <TeamAvatar color={GameState.G.victory} photoURL={GameState.G.teamPhotoURLs[GameState.G.victory]} style={teamImgStyle} /> : null}
-			🎆 <Span tt="capitalize">{GameState.G.victory}</Span> team completed a line of 4 to win the game! 🎆
-		</Modal>
+		<TeamColorModal opened={opened} onClose={close} team={GameState.G.victory} title="Winner!">
+			<VictoryMessage team={GameState.G.victory} />
+		</TeamColorModal>
 	)
 }
 
-const teamImgStyle : React.CSSProperties = { 
+export function VictoryMessage({ team }: { team: MatchTeamColor }) {
+	const GameState = useContext(GameContext);
+	return (
+		<>
+			<TeamAvatar color={team} photoURL={GameState.G.teamPhotoURLs[team]} style={teamImgStyle} />
+			🎆 <Span tt="capitalize">{team}</Span> team completed a line of 4 to win the game! 🎆
+		</>
+	)
+}
+
+const teamImgStyle : React.CSSProperties = {
 		display: 'block',
 		margin: 'auto',
-		width: `60%`, 
-		objectFit: "cover", 
-		borderRadius: "8px", 
+		width: `60%`,
+		objectFit: "cover",
+		borderRadius: "8px",
 		}
