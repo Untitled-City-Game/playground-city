@@ -4,12 +4,42 @@ import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 
 const DEBUG = true
 
-export default async function claimZone(playerId : string, completeChallengeAndClaim : ConnectFourMoves["completeChallengeAndClaim"], zoneId: number, challenge : string, evidence : File[] ) {
+// Applies the claim immediately, then uploads the evidence in the background.
+// The log shows a placeholder until attachEvidence delivers the URLs.
+export default function claimZone(playerId : string, moves : Pick<ConnectFourMoves, "completeChallengeAndClaim" | "attachEvidence">, zoneId: number, challenge : string, evidence : File[] ) {
 	DEBUG && console.log("claiming zone on client", zoneId, challenge, evidence);
-	const evidenceUrls = await uploadEvidence(evidence, playerId);
-	DEBUG && console.log("got urls", evidenceUrls)
-	completeChallengeAndClaim(zoneId, challenge, evidenceUrls);
-	return;
+	const files = evidence ?? [];
+	// Not crypto.randomUUID: it's unavailable over plain http (LAN phone testing).
+	const evidenceId = `${playerId}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+	moves.completeChallengeAndClaim(zoneId, challenge, evidenceId, files.map(file => file.type));
+	if (files.length === 0) return;
+
+	trackPendingUpload(1);
+	uploadEvidence(files, playerId)
+		.then(evidenceUrls => {
+			DEBUG && console.log("got urls", evidenceUrls)
+			moves.attachEvidence(evidenceId, evidenceUrls);
+		})
+		.catch(e => {
+			console.error("evidence upload failed", e);
+			moves.attachEvidence(evidenceId, []);
+		})
+		.finally(() => trackPendingUpload(-1));
+}
+
+// Warn before leaving while uploads are in flight, since a closed tab would
+// leave the placeholder stuck on "uploading" for everyone.
+let pendingUploads = 0;
+function warnBeforeUnload(event: BeforeUnloadEvent) {
+	event.preventDefault();
+}
+function trackPendingUpload(change: number) {
+	pendingUploads += change;
+	if (pendingUploads > 0) {
+		window.addEventListener("beforeunload", warnBeforeUnload);
+	} else {
+		window.removeEventListener("beforeunload", warnBeforeUnload);
+	}
 }
 
 export async function uploadEvidence(evidence: File[], playerId: string) {

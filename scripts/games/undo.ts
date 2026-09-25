@@ -17,11 +17,14 @@ export default function customUndoTemplate<T extends GameStateUniversal>(context
 	// the live G underneath would leak fields the snapshot lacks: optional
 	// fields that were unset at snapshot time (e.g. victory) are absent from
 	// it, so they would survive the undo.
-	const { MatchMapData, challengeDeck } = G as GameStateAnything;
+	// evidenceUploads is kept live too, so media that finished uploading after
+	// the snapshot isn't lost.
+	const { MatchMapData, challengeDeck, evidenceUploads } = G as GameStateAnything;
 	return {
 		...lastState,
 		...(MatchMapData !== undefined && { MatchMapData }),
 		...(challengeDeck !== undefined && { challengeDeck }),
+		...(evidenceUploads !== undefined && { evidenceUploads }),
 		gameStateLogs: G.gameStateLogs.slice(0,-1),
 	} as unknown as T
 }
@@ -29,6 +32,6 @@ export default function customUndoTemplate<T extends GameStateUniversal>(context
 export function createUndoPoint<GameState extends GameStateUniversal>(G: GameState){
 	// Exclude gameStateLogs (avoids nesting) and the static-after-setup fields,
 	// which are restored from the live state on undo rather than copied here.
-	const { gameStateLogs, MatchMapData, challengeDeck, ...rest } = G as GameStateAnything;
+	const { gameStateLogs, MatchMapData, challengeDeck, evidenceUploads, ...rest } = G as GameStateAnything;
 	G.gameStateLogs.push(rest as GameStateLog<GameState>);
 }

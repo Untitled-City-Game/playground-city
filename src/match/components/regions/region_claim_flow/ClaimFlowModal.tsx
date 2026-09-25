@@ -6,19 +6,17 @@ import { ChallengeDeckContext, ConnectFourContext, GameContext, LocationContext 
 import claimZone from "@/src/match/components/regions/region_claim_flow/claimZone";
 import { ModalHeader } from "@/src/match/components/regions/region_claim_flow/ui/ModalHeader";
 import { useMyZoneRef } from "@/src/match/interfaces/useMyZone";
-import Loading from "@/src/match/screens/game_status/Loading";
 import Button from "@/src/userInterface/CustomButton";
 import {
 	
 	Container,
 	FileInput,
-	LoadingOverlay,
 	Modal,
 	Select,
 	Stack
 } from "@mantine/core";
 import { hasLength, useForm } from "@mantine/form";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect } from "react";
 
 const claimFormValues = {
 	zone: "",
@@ -50,8 +48,6 @@ export default function ClaimFlowModal({
 	if (props.G.gameCode !== "connect_four") {
 		throw new Error("no challenges, game code " + props.G.gameCode);
 	}
-	
-	const [loading, setLoading] = useState(false);
 	
 	//const locationRef = useContext(LocationContext);
 	const myZoneRef = useMyZoneRef()
@@ -99,11 +95,10 @@ export default function ClaimFlowModal({
 	const allZones = props.G.zoneData.map(zone => { return { value: `${zone.id}`, label: zone.name } });
 	const zoneSelectOptions = validZones(allZones, props.G)
 
-	async function handleSubmit(values: ClaimFormValues) {
+	function handleSubmit(values: ClaimFormValues) {
 		const moves = props.moves as ConnectFourMoves
-		setLoading(true);
-		await claimZone(props.playerData.data.playerID, moves.completeChallengeAndClaim, Number(values.zone), values.challenge, values.evidence as unknown as File[]);
-		setLoading(false);
+		// Evidence uploads in the background, so there's nothing to wait for.
+		claimZone(props.playerData.data.playerID, moves, Number(values.zone), values.challenge, values.evidence as unknown as File[]);
 		closeClaim();
 	}
 
@@ -116,7 +111,6 @@ export default function ClaimFlowModal({
 			centered>
 			<Modal.Overlay />
 			<Modal.Content>
-				<LoadingOverlay visible={loading} loaderProps={{ children: <Loading message="Claiming neighbourhood..." /> }} />
 				{ModalHeader()}
 				<Modal.Body>
 					<Container pb="md">

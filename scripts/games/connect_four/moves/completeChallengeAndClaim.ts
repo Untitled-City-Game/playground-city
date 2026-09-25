@@ -11,7 +11,10 @@ export function completeChallengeAndClaim(
 	context: MoveContext<ConnectFourGameState>,
 	zoneID: number,
 	challenge: string,
-	evidence: string[]
+	// Evidence is uploaded after the move; the log references it by this ID
+	// and attachEvidence fills in the URLs once the upload finishes.
+	evidenceId?: string,
+	fileTypes: string[] = []
 ) {
 	const { G, log, playerID } = context;
 	const challengeInfo = G.challengeDeck.find(challengeInfo => challengeInfo.title === challenge);
@@ -22,7 +25,11 @@ export function completeChallengeAndClaim(
 	const claimData = claimZone({ G, log, playerID }, zoneID, challengeInfo);
 	if(claimData === "INVALID_MOVE") return claimData;
 	checkVictory(context);
-	completeChallenge({ G, log, playerID }, challenge, evidence);
+	if (evidenceId && fileTypes.length > 0) {
+		G.evidenceUploads ??= {};
+		G.evidenceUploads[evidenceId] = { status: "uploading", playerID, fileTypes, urls: [] };
+	}
+	completeChallenge({ G, log, playerID }, challenge, evidenceId);
 	drawToFull(context);
 	createUndoPoint(G);
 	addLogMetadata(
@@ -32,7 +39,7 @@ export function completeChallengeAndClaim(
 			zoneName: G.zoneData[zoneID].name,
 			team: G.allPlayersData[playerID].teamColor,
 			challenge: challengeInfo.title,
-			evidence,
+			evidenceId,
 		}
 	);
 }
@@ -84,14 +91,14 @@ export function claimZone(
 export function completeChallenge(
 	{ G, log, playerID }: { G: ConnectFourGameState; log: LogAPI; playerID: string; },
 	challenge: string,
-	evidence: string[]
+	evidenceId?: string
 ) {
 	discardChallenge({ G, log, playerID }, challenge);
 	addLogMetadata(
 		{ log },
 		{
 			challenge,
-			evidence,
+			evidenceId,
 			team: G.allPlayersData[playerID].teamColor,
 		}
 	);

@@ -23,6 +23,16 @@ export type GameStateUniversal = {
 	active: boolean;
 	teamPhotoURLs: {[key in MatchTeamString] : string}
 	victory?: MatchTeamColor
+	// Challenge evidence uploaded in the background after a claim, keyed by the
+	// evidenceId stored in that claim's log metadata.
+	evidenceUploads?: Record<string, EvidenceUpload>
+}
+
+export type EvidenceUpload = {
+	status: "uploading" | "done" | "failed";
+	playerID: string;
+	fileTypes: string[];
+	urls: string[];
 }
 
 export type GameStateGeneric = ConnectFourGameState | SnakeGameState
@@ -36,9 +46,11 @@ export type MoveContext<SomeGameState extends GameStateUniversal> = DefaultPlugi
 // Undo snapshots stored in gameStateLogs. We omit gameStateLogs itself (no
 // nesting) plus fields that are fixed at setup() and never change during play
 // (MatchMapData, challengeDeck) — those are restored from the live state on
-// undo instead of being copied into every snapshot. Omit ignores keys that a
-// given game state doesn't have (e.g. Snake has no MatchMapData).
-export type GameStateLog<GameState extends GameStateUniversal> = Omit<GameState, "gameStateLogs" | "MatchMapData" | "challengeDeck">
+// undo instead of being copied into every snapshot. evidenceUploads is also
+// kept live so undo never discards media that finished uploading later. Omit
+// ignores keys that a given game state doesn't have (e.g. Snake has no
+// MatchMapData).
+export type GameStateLog<GameState extends GameStateUniversal> = Omit<GameState, "gameStateLogs" | "MatchMapData" | "challengeDeck" | "evidenceUploads">
 
 export type AllPlayersData = {
 	[key:string] : PlayerData
@@ -118,6 +130,7 @@ export type GameBoardContext = BoardProps<GameStateGeneric> & ClientSetupData
 export type LogMetadata = {
 	date?: string;
 	evidence?: string[];
+	evidenceId?: string;
 	challenge?: string;
 	zone?: number;
 	zoneName?: string;

@@ -1,10 +1,11 @@
 import { LogMetadata } from "@/scripts/types/types";
 import ImageMantine from "@/src/userInterface/ImageMantine";
-import { Box, Stack } from "@mantine/core";
+import { Box, Loader, Stack } from "@mantine/core";
 import ReactPlayer from "react-player";
 import P from "@/src/userInterface/P";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import getMime from "@/scripts/helpers/mime";
+import { GameContext } from "@/src/match/Board";
 const DEBUG = true;
 
 export function ClaimChallengeCompleted({ metadata }: { metadata: LogMetadata; }) {
@@ -31,10 +32,15 @@ type EvidenceMime = {
 } | undefined
 
 export function ChallengeEvidence({ metadata, myMessage }: { metadata: LogMetadata; myMessage?: boolean }) {
+	const { G } = useContext(GameContext);
+	// Newer claims reference a background upload in G; older entries (and
+	// Snake) carry the URLs directly in the log metadata.
+	const upload = metadata.evidenceId ? G.evidenceUploads?.[metadata.evidenceId] : undefined;
+	const evidenceUrls = upload ? upload.urls : metadata.evidence ?? [];
 	const [evidenceMime, setEvidenceMime] = useState<EvidenceMime[]>([])
 		useEffect(() => {
-			metadata.evidence ? findEvidenceType(metadata.evidence) : null
-		}, [metadata])
+			findEvidenceType(evidenceUrls)
+		}, [evidenceUrls.join()])
 
 	async function findEvidenceType(evidence : string[]){
 		const mimedEvidence : Array<EvidenceMime>= await Promise.all(evidence.map(async imageLink => {
@@ -89,10 +95,35 @@ export function ChallengeEvidence({ metadata, myMessage }: { metadata: LogMetada
 		</Box>)
 	});
 
+	const failedCount = upload?.status === "failed" ? upload.fileTypes.length - upload.urls.length : 0;
+
 	return (
 		<Stack align={myMessage ? "flex-end" : "flex-start"} justify={myMessage ? "flex-end" : "flex-start"}>
-			{metadata.evidence && evidenceImages}
+			{upload?.status === "uploading"
+				? upload.fileTypes.map((fileType, index) => <EvidencePlaceholder key={index} fileType={fileType} />)
+				: evidenceImages}
+			{failedCount > 0 ? <P c="dimmed" fz="sm">{failedCount} file{failedCount === 1 ? "" : "s"} failed to upload</P> : null}
 		</Stack>
 	)
 
+}
+
+
+function EvidencePlaceholder({ fileType }: { fileType: string }) {
+	const kind = fileType.startsWith("video") ? "video" : "photo";
+	return (
+		<Stack
+			w="min(80%, 300px)"
+			h="170px"
+			mb="4px"
+			bg="gray.1"
+			align="center"
+			justify="center"
+			gap="xs"
+			style={{ borderRadius: "10px" }}
+		>
+			<Loader size="sm" color="gray" />
+			<P c="dimmed" fz="sm" pb={0}>Uploading {kind}…</P>
+		</Stack>
+	);
 }
