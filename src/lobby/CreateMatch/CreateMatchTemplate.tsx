@@ -1,8 +1,8 @@
 import { games } from "@/scripts/consts";
-import { City, NamedColor, PlayerData } from "@/scripts/types/types";
+import { CityOrCustom, NamedColor, PlayerData } from "@/scripts/types/types";
 import Loading from "@/src/match/screens/game_status/Loading";
 import Span from "@/src/userInterface/Span";
-import { Radio, Paper, Group, LoadingOverlay, Stack, TextInput, Checkbox, Stepper, StepperProps } from "@mantine/core";
+import { Alert, Radio, Paper, Group, LoadingOverlay, Stack, TextInput, Checkbox, Stepper, StepperProps } from "@mantine/core";
 import { hasLength, useForm, UseFormReturnType } from "@mantine/form";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router";
@@ -17,7 +17,8 @@ export type FormValues = {
     PlayerName: string;
     teamColor: NamedColor;
     gameName: string;
-    city?: City;
+    city?: CityOrCustom;
+    customMapLink?: string;
     winter?: boolean;
     money?: boolean;
     [key: string]: any;
@@ -35,6 +36,8 @@ export default function CreateMatchTemplate({
     getSetupData,
     createGameForm,
     extraSteps,
+    firstStepFields,
+    firstStepBlocked,
     children
 }: {
     teamOptions: string[]
@@ -42,9 +45,14 @@ export default function CreateMatchTemplate({
     getSetupData: (args: FormValues) => Record<string, unknown> | Promise<Record<string, unknown>>;
     createGameForm: CreateGameFormUniversal;
     extraSteps?: ExtraStep[];
+    /** Form fields on the game-specific first step to validate before advancing. */
+    firstStepFields?: string[];
+    /** Holds the first step open for reasons the form can't express, e.g. a custom map that hasn't loaded yet. */
+    firstStepBlocked?: boolean;
     children: React.ReactNode
 }) {
     const [loading, setLoading] = useState(false);
+    const [createError, setCreateError] = useState<string | undefined>();
     const [step, setStep] = useState(0);
     const teamCards = createTeamCards(teamOptions);
     const navigate = useNavigate();
@@ -52,7 +60,7 @@ export default function CreateMatchTemplate({
     const totalSteps = baseStepCount + (extraSteps?.length ?? 0);
 
     const stepFields: string[][] = [
-        [],            // step 0: game-specific (children — validated by their own form bindings)
+        firstStepFields ?? [],  // step 0: game-specific (children)
         [],            // step 1: modes (toggles, no validation)
         ["PlayerName"],
         ["teamColor"],
@@ -61,6 +69,7 @@ export default function CreateMatchTemplate({
 
     function handleNext(e?: React.SyntheticEvent) {
         e?.preventDefault();
+        if (step === 0 && firstStepBlocked) return;
         const fields = stepFields[step];
         const hasError = fields
             .map((field) => createGameForm.validateField(field).hasError)
@@ -85,34 +94,43 @@ export default function CreateMatchTemplate({
 
     async function handleCreateGame(values: FormValues) {
         setLoading(true);
+        setCreateError(undefined);
         if (!gameCode) { throw new Error("No game code provided"); }
-        const gameSetupData = await getSetupData(values);
-        const setupData = {
-            winter: values.winter ?? false,
-            money: values.money ?? false,
-            ...gameSetupData
+        try {
+            const gameSetupData = await getSetupData(values);
+            const setupData = {
+                winter: values.winter ?? false,
+                money: values.money ?? false,
+                ...gameSetupData
+            }
+            console.log("creating game", values, setupData);
+            console.log("env game server", process.env.GAME_SERVER)
+            console.log("env location server path", process.env.LOCATION_SERVER_PATH)
+            //create match
+            console.log("setting up match");
+            const { matchID } = await lobbyClient.createMatch(gameCode, {
+                numPlayers: 20,
+                setupData
+            });
+            console.log("joining match");
+            //join match
+            const playerData: PlayerData = await joinMatch(
+                lobbyClient,
+                gameCode,
+                matchID,
+                values.PlayerName,
+                values.teamColor,
+                true
+            );
+            localStorage.setItem("localPlayerData", JSON.stringify(playerData));
+            navigate("/match");
+        } catch (error) {
+            // Without this the loading overlay would sit there forever — most
+            // likely cause is a custom map that stopped loading between steps.
+            console.error("Failed to create match", error);
+            setCreateError(error instanceof Error ? error.message : "Could not create the match. Please try again.");
+            setLoading(false);
         }
-        console.log("creating game", values, setupData);
-        console.log("env game server", process.env.GAME_SERVER)
-        console.log("env location server path", process.env.LOCATION_SERVER_PATH)
-        //create match
-        console.log("setting up match");
-        const { matchID } = await lobbyClient.createMatch(gameCode, {
-            numPlayers: 20,
-            setupData
-        });
-        console.log("joining match");
-        //join match
-        const playerData: PlayerData = await joinMatch(
-            lobbyClient,
-            gameCode,
-            matchID,
-            values.PlayerName,
-            values.teamColor,
-            true
-        );
-        localStorage.setItem("localPlayerData", JSON.stringify(playerData));
-        navigate("/match");
     }
 
     const game = games.filter(game => game.code === gameCode)[0]
@@ -189,6 +207,7 @@ export default function CreateMatchTemplate({
                         )}
                     </Stack>
                     <Group justify="space-between" pt="sm">
+                        {createError && <Alert color="red" w="100%">{createError}</Alert>}
                         <Button onClick={handleBack} type="button">Back</Button>
                         {step < totalSteps - 1
                             ? <Button onClick={handleNext} type="button">Next</Button>

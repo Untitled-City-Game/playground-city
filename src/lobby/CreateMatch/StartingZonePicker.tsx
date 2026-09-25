@@ -1,6 +1,5 @@
-import { gameLocationCenters } from "@/scripts/consts";
-import { fetchMapData } from "@/scripts/fetchMapData";
-import { City, MatchMapData } from "@/scripts/types/types";
+import { fetchMapData, matchMapCenter } from "@/scripts/fetchMapData";
+import { CityOrCustom, MatchMapData } from "@/scripts/types/types";
 import VisGlMapElement from "@/src/match/googleMaps/VisGLMapElement";
 import { GenericMapZones } from "@/src/match/screens/connect_four/GenericMapZones";
 import P from "@/src/userInterface/P";
@@ -9,18 +8,21 @@ import React, { useEffect, useState } from "react";
 
 export default function StartingZonePicker({
     city,
+    customMapId,
     mapData: mapDataProp,
     value,
     onChange,
     onMapDataLoaded,
 }: {
-    city: City;
+    city: CityOrCustom;
+    customMapId?: string;
     mapData?: MatchMapData;
     value?: string;
     onChange: (zone: string) => void;
     onMapDataLoaded?: (mapData: MatchMapData) => void;
 }) {
     const [fetchedMapData, setFetchedMapData] = useState<MatchMapData | undefined>();
+    const [error, setError] = useState<string | undefined>();
     const mapData = mapDataProp ?? fetchedMapData;
 
     useEffect(() => {
@@ -28,15 +30,23 @@ export default function StartingZonePicker({
         if (mapDataProp) return;
         let cancelled = false;
         setFetchedMapData(undefined);
-        fetchMapData(city).then((data) => {
+        setError(undefined);
+        fetchMapData(city, customMapId).then((data) => {
             if (cancelled) return;
             setFetchedMapData(data);
             onMapDataLoaded?.(data);
+        }).catch((e) => {
+            if (cancelled) return;
+            setError(e instanceof Error ? e.message : "Could not load that map.");
         });
         return () => {
             cancelled = true;
         };
-    }, [city, mapDataProp]);
+    }, [city, customMapId, mapDataProp]);
+
+    if (error) {
+        return <P fz="sm" c="red">{error}</P>;
+    }
 
     if (!mapData) {
         return (
@@ -65,7 +75,7 @@ export default function StartingZonePicker({
                 onChange={(v) => onChange(v ?? "")}
             />
             <Box style={mapContainerStyle}>
-                <VisGlMapElement center={gameLocationCenters[city]} gestureHandling="cooperative">
+                <VisGlMapElement center={matchMapCenter(mapData)} gestureHandling="cooperative">
                     <GenericMapZones
                         MapData={mapData}
                         selectedZone={value ?? ""}

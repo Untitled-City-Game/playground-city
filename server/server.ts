@@ -23,6 +23,13 @@ async function buildServer() {
     });
     server.router.get('/map-data/:citycode', async (ctx) => {
         console.log("getting map data for city", ctx.params.citycode);
+        // Players can supply their own My Maps id here, so check the shape before
+        // it goes anywhere near the URL we build.
+        if (!/^[A-Za-z0-9_-]{10,128}$/.test(ctx.params.citycode)) {
+            ctx.status = 400;
+            ctx.body = { error: 'Invalid map id' };
+            return;
+        }
         console.log("at url", `https://www.google.com/maps/d/u/0/kml?forcekml=1&mid=${ctx.params.citycode}`)
         try {
             const mapData = await fetch(`https://www.google.com/maps/d/u/0/kml?forcekml=1&mid=${ctx.params.citycode}`);

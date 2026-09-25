@@ -3,7 +3,7 @@ import { Ctx, DefaultPluginAPIs, LobbyAPI } from 'boardgame.io';
 import { BoardProps } from 'boardgame.io/react';
 import { LineString } from 'geojson';
 import { Dispatch, JSX, ReactElement, SetStateAction } from 'react';
-import { cities } from '../consts';
+import { cities, CUSTOM_CITY } from '../consts';
 import { SnakeGameState } from '@/scripts/games/snake/types';
 import { PolyData, LineData } from '@/scripts/types/googleMaps';
 import { ConnectFourGameState } from '@/scripts/games/connect_four/types';
@@ -73,6 +73,13 @@ export interface MapData {
 
 export type City = typeof cities[number];
 
+export type CustomCity = typeof CUSTOM_CITY;
+
+// Anywhere a match can be played: one of the built-in cities, or a player-supplied
+// Google My Maps map. Keyed lookups into `maps`/`gameLocationCenters` only accept
+// `City`, so narrow before indexing them.
+export type CityOrCustom = City | CustomCity;
+
 export type GameSetupDataGeneric = {
 	gameName: string,
 	winter: boolean,
@@ -80,7 +87,15 @@ export type GameSetupDataGeneric = {
 }
 
 export interface MatchMapData extends MapData {
-	city : City;
+	city : CityOrCustom;
+	// Name to show players. Built-in cities use their entry in `maps`; custom maps
+	// use the title from the KML document.
+	mapName?: string;
+	// Google My Maps id the KML came from. Only set for custom maps.
+	customMapId?: string;
+	// Where to point the camera. Optional because matches created before custom
+	// maps existed have no centre stored — use `matchMapCenter()` to read it.
+	center?: google.maps.LatLngLiteral;
 }
 
 export type ClientSetupData = {
