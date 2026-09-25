@@ -7,7 +7,7 @@ import P from "@/src/userInterface/P";
 import Span from "@/src/userInterface/Span";
 import { Box, Center, CloseButton, Container, Flex, Group, Stack, useMantineTheme } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import React, { Dispatch, SetStateAction, useContext, useEffect, useState } from "react";
+import React, { Dispatch, SetStateAction, useContext, useEffect } from "react";
 import { FaArrowCircleLeft, FaArrowCircleRight, FaCircle, FaGripLinesVertical, FaRegCircle } from "react-icons/fa";
 
 export default function SelectedZonePopup({
@@ -33,24 +33,14 @@ export default function SelectedZonePopup({
         setCurrentZone(undefined);
         setActiveLine(undefined);
     }
-    const [lineIndex, setLineIndex] = useState(0);
+    // Derived from activeLine rather than held in state, so it stays in sync
+    // when the parent resets activeLine on a zone change.
+    const lineIndex = Math.max(0, lines.findIndex(line => activeLine && isSameLine(line, activeLine)));
     function nextLine() {
-        if (lineIndex >= lines.length - 1) {
-            setLineIndex(0)
-            setActiveLine(lines[0])
-        } else {
-            setLineIndex(lineIndex + 1);
-            setActiveLine(lines[lineIndex + 1])
-        }
+        setActiveLine(lines[(lineIndex + 1) % lines.length])
     }
     function prevLine() {
-        if (lineIndex == 0) {
-            setLineIndex(lines.length - 1)
-            setActiveLine(lines[lines.length - 1])
-        } else {
-            setLineIndex(lineIndex - 1);
-            setActiveLine(lines[lineIndex - 1])
-        }
+        setActiveLine(lines[(lineIndex - 1 + lines.length) % lines.length])
     }
     useEffect(() => {
         if (activeLine === undefined) { setActiveLine(lines[0]); }
@@ -171,6 +161,12 @@ const selectedZonePopupStyles: React.CSSProperties = {
     textAlign: "center",
     padding: "0.5rem 1rem",
 };
+
+// Match by content, not identity: synced game state can hand us fresh objects,
+// and line names from KML aren't guaranteed unique.
+function isSameLine(a: LineData, b: LineData) {
+    return a === b || (a.featureName === b.featureName && a.matchedPolygons.join() === b.matchedPolygons.join());
+}
 
 const lineNavButtonStyles = (color: string): React.CSSProperties => ({
     background: "none",
