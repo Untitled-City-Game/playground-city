@@ -13,6 +13,10 @@ export function challengeDeckTeamSetup(context: MoveContext<ChallengeGameGameSta
 		team.challengeDeck = shuffledDeck;
 		team.challengeHand = [];
 		team.challengeDiscard = [];
+	}
+	//draw only once every team is reset, since each draw avoids challenges
+	//other teams already hold
+	for (const teamColor of Object.keys(G.allTeamsChallengeData)) {
 		drawToFull(context, teamColor as MatchTeamColor);
 	}
 }
