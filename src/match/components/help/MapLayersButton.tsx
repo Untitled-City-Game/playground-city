@@ -7,7 +7,7 @@ const layerOptions: { layer: keyof TransitLayerSettings, label: string, descript
 	{ layer: "train", label: "Train lines" },
 	{ layer: "metro", label: "Metro lines" },
 	{ layer: "tram", label: "Light rail & tram lines" },
-	{ layer: "bus", label: "Bus lines", description: "Shown when zoomed in" },
+	{ layer: "bus", label: "Bus lines" },
 ];
 
 export default function MapLayersIcon() {

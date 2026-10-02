@@ -1,12 +1,11 @@
 import { Bounds, TransitFeatureCollection, TransitMode, transitModes } from "@/scripts/types/transit";
-import { ZoomContext } from "@/src/match/googleMaps/VisGLMapElement";
 import useTransitData from "@/src/match/components/transit/useTransitData";
 import { anyLayerEnabled, isModeEnabled, useTransitLayers } from "@/src/match/components/transit/transitLayerSettings";
 import type { Color } from "@deck.gl/core";
 import { GoogleMapsOverlay } from "@deck.gl/google-maps";
 import { PathLayer } from "@deck.gl/layers";
 import { ControlPosition, MapControl, useMap } from "@vis.gl/react-google-maps";
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 // Fallback colours for lines with no colour in OSM
 const modeColours: Record<TransitMode, string> = {
@@ -29,12 +28,6 @@ const lineWidths: Record<TransitMode, number> = {
 	bus: 1.5,
 };
 
-// Least zoom at which each mode's lines are drawn, to keep the zoomed-out
-// map readable in bus-heavy cities.
-const lineMinZoom: Record<TransitMode, number> = {
-	train: 0, subway: 0, light_rail: 0, tram: 0, bus: 13,
-};
-
 type TransitLine = { path: [number, number][], mode: TransitMode, colour: Color };
 
 /**
@@ -47,16 +40,11 @@ export default function TransitOverlay({ bounds }: { bounds: Bounds | undefined 
 	const transit = useTransitData(bounds);
 	const [overlay, setOverlay] = useState<GoogleMapsOverlay>();
 
-	// The map's zoom changes many times a second while zooming (it's
-	// fractional on vector maps), but what's drawn only changes when a mode
-	// crosses its min zoom — key everything below off the whole-number zoom.
-	const zoomLevel = Math.floor(useContext(ZoomContext));
-
 	const lines = useMemo(() => toDrawable(transit), [transit]);
 	const layers = useTransitLayers();
 	const visibleLines = useMemo(
-		() => lines.filter(line => zoomLevel >= lineMinZoom[line.mode] && isModeEnabled(line.mode, layers)),
-		[lines, zoomLevel, layers]
+		() => lines.filter(line => isModeEnabled(line.mode, layers)),
+		[lines, layers]
 	);
 
 	useEffect(() => {
