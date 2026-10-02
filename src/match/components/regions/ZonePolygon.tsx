@@ -41,7 +41,7 @@ export default function ZonePolygon({
 		const smallVersion = turf.buffer(turf.polygon([coordsAsArray]), -0.0005, { units: "degrees" })
 		return smallVersion?.geometry.coordinates[0].map(position => { return { lat: position[0], lng: position[1] } })
 	}, [coordsAsArray]);
-	const zoomThreshold = 14;
+	const zoomThreshold = 15;
 	const [zoom, setZoom] = useState(0);
 	const map = useMap();
 	useEffect(() => {
