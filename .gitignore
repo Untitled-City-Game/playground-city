@@ -13,3 +13,4 @@ dist/
 server/db/
 package-lock.json
 fetchtest.js
+server/cache/

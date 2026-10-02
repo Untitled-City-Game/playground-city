@@ -1,6 +1,7 @@
 import { theme } from "@/src/styles/theme";
 import HelpIcon from "@/src/match/components/help/HelpButton";
 import SettingsIcon from "@/src/match/components/help/SettingsButton";
+import MapLayersIcon from "@/src/match/components/help/MapLayersButton";
 import { Center, Group } from "@mantine/core";
 import { useContext } from "react";
 import Countdown from 'react-countdown';
@@ -20,6 +21,7 @@ export default function StatusBar({ children }: { children?: React.ReactNode }) 
                     }
                 /> remaining</Span>
                 <HelpIcon />
+                <MapLayersIcon />
                 <SettingsIcon />
             </Group>
         </Center>

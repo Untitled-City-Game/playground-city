@@ -13,11 +13,17 @@
 		"serve": "NODE_OPTIONS='--max-old-space-size=512' tsx --env-file .env.development server/server.ts",
 		"build-server": "esbuild server/server.ts --bundle --platform=node --outfile=build/server.js --packages=external",
 		"start-dev-server": "node --max-old-space-size=512 --env-file=.env.development build/server.js",
+		"start-dev-server-patient": "node --max-old-space-size=512 --network-family-autoselection-attempt-timeout=2000 --env-file=.env.development build/server.js",
 		"serve-dev": "npm run build-server && npm run start-dev-server",
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
+		"@deck.gl/core": "~9.4.0",
+		"@deck.gl/google-maps": "~9.4.0",
+		"@deck.gl/layers": "~9.4.0",
 		"@dotenvx/dotenvx": "^1.51.1",
+		"@luma.gl/core": "~9.4.0",
+		"@luma.gl/webgl": "~9.4.0",
 		"@mantine/core": "^7.17.2",
 		"@mantine/form": "^7.17.2",
 		"@mantine/hooks": "^7.17.2",

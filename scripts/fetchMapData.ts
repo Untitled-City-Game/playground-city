@@ -6,6 +6,7 @@ import * as toGeoJson from "@tmcw/togeojson";
 import { DOMParser } from "xmldom";
 import { City, CityOrCustom, MatchMapData } from "./types/types";
 import { LineData, PolyData } from "@/scripts/types/googleMaps";
+import { Bounds } from "@/scripts/types/transit";
 
 export async function fetchMapData(cityName: CityOrCustom = "london", customMapId?: string) : Promise<MatchMapData> {
   console.log("fetch map data")
@@ -53,8 +54,18 @@ function resolveMapId(cityName: CityOrCustom, customMapId?: string): string {
 // findPolygonCenter: this runs during match setup, where the Google Maps JS API
 // isn't guaranteed to have loaded yet.
 function boundsCenter(zonePolygons: PolyData[]): google.maps.LatLngLiteral {
+  const bounds = zoneBounds(zonePolygons);
+  if (!bounds) return { lat: 0, lng: 0 };
+  return { lat: (bounds.south + bounds.north) / 2, lng: (bounds.west + bounds.east) / 2 };
+}
+
+/**
+ * Bounding box of every zone, optionally grown by `padding` (a fraction of its
+ * size) on each side. Undefined when there are no zones.
+ */
+export function zoneBounds(zonePolygons: PolyData[], padding = 0): Bounds | undefined {
   const coords = zonePolygons.flatMap(zone => zone.coords);
-  if (coords.length === 0) return { lat: 0, lng: 0 };
+  if (coords.length === 0) return undefined;
   let minLat = Infinity, maxLat = -Infinity, minLng = Infinity, maxLng = -Infinity;
   for (const { lat, lng } of coords) {
     if (lat < minLat) minLat = lat;
@@ -62,7 +73,9 @@ function boundsCenter(zonePolygons: PolyData[]): google.maps.LatLngLiteral {
     if (lng < minLng) minLng = lng;
     if (lng > maxLng) maxLng = lng;
   }
-  return { lat: (minLat + maxLat) / 2, lng: (minLng + maxLng) / 2 };
+  const latPad = (maxLat - minLat) * padding;
+  const lngPad = (maxLng - minLng) * padding;
+  return { south: minLat - latPad, west: minLng - lngPad, north: maxLat + latPad, east: maxLng + lngPad };
 }
 
 async function fetchKML(mapId: string){

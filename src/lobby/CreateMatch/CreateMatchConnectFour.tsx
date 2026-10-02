@@ -1,10 +1,11 @@
 import { cities, CUSTOM_CITY, gameLocationCenters, maps } from "@/scripts/consts";
 import { CUSTOM_MAP_HELP, parseCustomMapId } from "@/scripts/customMap";
 import { fetchChallenges } from "@/scripts/games/challenge_deck/fetchChallenges";
-import { fetchMapData } from "@/scripts/fetchMapData";
+import { fetchMapData, zoneBounds } from "@/scripts/fetchMapData";
 import { City, CityOrCustom, MatchMapData } from "@/scripts/types/types";
 import CreateMatchTemplate, { createGameFormConstructor, FormValues } from "@/src/lobby/CreateMatch/CreateMatchTemplate";
 import StartingZonePicker from "@/src/lobby/CreateMatch/StartingZonePicker";
+import { transitUrl } from "@/src/match/components/transit/useTransitData";
 import { ThemeColor } from "@/src/styles/theme";
 import Button from "@/src/userInterface/CustomButton";
 import P from "@/src/userInterface/P";
@@ -89,6 +90,14 @@ export default function CreateMatchConnectFour() {
 		});
 		return () => { cancelled = true; };
 	}, [city, customMapId, importAttempt]);
+
+	// Transit data can take a while to build the first time a map is played, so
+	// ask the server for it now and let it cache before anyone opens the map.
+	// Must use the same bounds as ConnectFourMap.
+	useEffect(() => {
+		const bounds = mapData && zoneBounds(mapData.zonePolygons, 0.1);
+		if (bounds) fetch(transitUrl(bounds)).catch(() => {});
+	}, [mapData]);
 
 	//Setup mantine form
 	const createGameForm = createGameFormConstructor(

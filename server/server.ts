@@ -3,6 +3,7 @@ import { FlatFile, Origins, Server } from 'boardgame.io/server';
 import { Snake } from '@scripts/games/snake/snake';
 import { Server as IOServer } from 'socket.io';
 import type { LocationData } from '@scripts/types/types';
+import { getTransit, parseBounds } from '@server/transit';
 const authenticateCredentials = async () => {
     return true;
 }
@@ -80,6 +81,25 @@ async function buildServer() {
             console.error('Error fetching map data:', error);
             ctx.status = 500;
             ctx.body = { error: 'Internal server error' };
+        }
+    });
+    // Public transport lines and stations for a bbox (south,west,north,east),
+    // from OpenStreetMap. Display only — never part of the game state.
+    server.router.get('/transit', async (ctx) => {
+        const bounds = parseBounds(ctx.query.bbox);
+        if (!bounds) {
+            ctx.status = 400;
+            ctx.body = { error: 'Invalid bbox' };
+            return;
+        }
+        try {
+            ctx.body = await getTransit(bounds);
+            // Payloads run to a couple of MB in big cities; let browsers keep them.
+            ctx.set('Cache-Control', 'public, max-age=86400');
+        } catch (error) {
+            console.error('Error fetching transit data:', error);
+            ctx.status = 502;
+            ctx.body = { error: 'Failed to retrieve transit data' };
         }
     });
     const PORT = parseInt(process.env.SERVER_PORT || "8989");
