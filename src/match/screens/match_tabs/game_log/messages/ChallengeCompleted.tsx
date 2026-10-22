@@ -1,11 +1,11 @@
 import { LogMetadata } from "@/scripts/types/types";
 import ImageMantine from "@/src/userInterface/ImageMantine";
-import { Box, Loader, Stack } from "@mantine/core";
-import ReactPlayer from "react-player";
+import { Box, Group, Loader, Stack } from "@mantine/core";
 import P from "@/src/userInterface/P";
 import { useContext, useEffect, useState } from "react";
 import getMime from "@/scripts/helpers/mime";
 import { GameContext } from "@/src/match/Board";
+import { ShareEvidenceButton } from "@/src/match/screens/match_tabs/game_log/messages/ShareEvidenceButton";
 const DEBUG = true;
 
 export function ClaimChallengeCompleted({ metadata }: { metadata: LogMetadata; }) {
@@ -63,30 +63,40 @@ export function ChallengeEvidence({ metadata, myMessage }: { metadata: LogMetada
 		
 		DEBUG && console.warn("my message?", myMessage)
 		
+		const mime = `${fileCategory}/${fileType}`;
+		const shareTitle = `${metadata.team} team: ${metadata.challenge}`;
+		const shareButton = <ShareEvidenceButton link={link} mime={mime} title={shareTitle} />;
 		if (fileCategory === "image") {
 			return (
-				<ImageMantine
-					style={{
-						borderRadius: "10px",
-					}}
-					key={link}
-					src={link}
-					alt={`${metadata.team} team completed challenge ${metadata.challenge} to claim zone ${metadata.zone}`}
-					w="min(80%, 300px)"
-					mb="4px"
-				/>
+				<EvidenceRow key={link} myMessage={myMessage} shareButton={shareButton}>
+					<ImageMantine
+						style={{
+							borderRadius: "10px",
+						}}
+						src={link}
+						alt={`${metadata.team} team completed challenge ${metadata.challenge} to claim zone ${metadata.zone}`}
+						w="min(80%, 300px)"
+					/>
+				</EvidenceRow>
 			);
 		}
 		if(fileCategory === "video"){
+			// Fixed width like a message bubble; height: auto keeps the video's own
+			// aspect ratio, so there's no letterboxing.
 			return (
-				<>
-					{/* <video style={{maxWidth: "min(80%, 300px)", marginBottom: "4px"}} controls>
-						<source src={imageLink} type={fileMime as string} />
-					</video> */}
-					<Box>
-					<ReactPlayer width={"300px"} url={link} controls />
-					</Box>
-					</>
+				<EvidenceRow key={link} myMessage={myMessage} shareButton={shareButton}>
+					<video
+						src={link}
+						controls
+						preload="metadata"
+						style={{
+							display: "block",
+							width: "80%",
+							height: "auto",
+							borderRadius: "10px",
+						}}
+					/>
+				</EvidenceRow>
 			);
 		}
 		return (
@@ -108,6 +118,18 @@ export function ChallengeEvidence({ metadata, myMessage }: { metadata: LogMetada
 
 }
 
+
+// Media with its share button beside it, vertically centred, on the side away
+// from the edge the message is aligned to (like WhatsApp's forward button).
+function EvidenceRow({ myMessage, shareButton, children }: { myMessage?: boolean; shareButton: React.ReactNode; children: React.ReactNode }) {
+	return (
+		<Group w="100%" gap="xs" mb="4px" wrap="nowrap" align="center" justify={myMessage ? "flex-end" : "flex-start"}>
+			{myMessage ? shareButton : null}
+			{children}
+			{myMessage ? null : shareButton}
+		</Group>
+	);
+}
 
 function EvidencePlaceholder({ fileType }: { fileType: string }) {
 	const kind = fileType.startsWith("video") ? "video" : "photo";
