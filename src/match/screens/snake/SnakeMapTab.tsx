@@ -6,6 +6,7 @@ import { useContext, useState } from "react";
 import * as turf from '@turf/turf';
 import FruitManager from "@/src/match/components/snake/FruitManager";
 import SnakeBody from "@/src/match/components/snake/SnakeBody";
+import TransitOverlay from "@/src/match/components/transit/LazyTransitOverlay";
 const boxSize = 10
 export default function SnakeMap(){
 	const SnakeGameState = useContext(SnakeContext)
@@ -23,6 +24,8 @@ export default function SnakeMap(){
 		lat,
 		lng
 	}));
+	const [west, south, east, north] = turf.bbox(circle)
+	const transitBounds = { south, west, north, east }
 	const snakeBodies = Object.keys(SnakeGameState.snakeTeamData).map(teamName => {
 		const teamData = SnakeGameState.snakeTeamData[teamName]
 		return <SnakeBody key={teamName} teamData={teamData}/>
@@ -39,6 +42,7 @@ export default function SnakeMap(){
 						innerCoords.reverse()
 					]}
 				/>
+				<TransitOverlay bounds={transitBounds} />
 				{snakeBodies}
 				<FruitManager playerLocation={playerLocation} />
 			</locationPigContext.Provider>

@@ -2,9 +2,10 @@ import { games } from "@/scripts/consts";
 import { SharedMoves } from "@/scripts/games/shared_moves/sharedMoves";
 import { GameContext } from "@/src/match/Board";
 import { GameInviteButton } from "@/src/match/screens/game_status/Waiting";
-import ConfirmButton from "@/src/userInterface/ConfirmModal";
+import Button from "@/src/userInterface/CustomButton";
+import ConfirmButton, { CloseWithConfirm } from "@/src/userInterface/ConfirmModal";
 import P from "@/src/userInterface/P";
-import { Center, Group, Modal, Stack, UnstyledButton } from "@mantine/core";
+import { Anchor, Center, Group, Modal, Stack, UnstyledButton } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useContext } from "react";
 import { BsFillGearFill } from "react-icons/bs";
@@ -49,6 +50,7 @@ export function SettingsModal({
 					Settings
 				</span>
 			}>
+			<CloseWithConfirm close={close}>
 			<P><strong>Host: </strong> {playerData[0]?.name}</P>
 			<p><strong>Invite code: </strong>{props.matchID}</p>
 			<Stack>
@@ -58,8 +60,19 @@ export function SettingsModal({
 					Undo last action
 				</ConfirmButton>
 				: null}
-			{props.playerData.data.admin ? <ConfirmButton action={handleEndGame} description="end the game">End Game</ConfirmButton> : null}
+			{props.playerData.data.admin && props.G.pausedAt !== undefined ?
+				<Button variant="outline" onClick={() => moves.unpauseGame()}>Resume game</Button>
+				: props.playerData.data.admin && !props.G.gameOver ?
+				<Button variant="outline" onClick={() => moves.pauseGame()}>Pause game</Button>
+				: null}
+			{props.playerData.data.admin && !props.G.gameOver ? <ConfirmButton action={handleEndGame} description="end the game">End Game</ConfirmButton> : null}
+			{process.env.BUG_REPORT ?
+				<Anchor href={process.env.BUG_REPORT} target="_blank" rel="noopener noreferrer" size="sm" c="dimmed">
+					Report a bug
+				</Anchor>
+				: null}
 				</Stack>
+			</CloseWithConfirm>
 		</Modal>
 	);
 }

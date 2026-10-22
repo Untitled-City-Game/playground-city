@@ -1,5 +1,7 @@
 import { Challenge } from "@/scripts/games/challenge_deck/challenge_deck_types";
+import { actionsLocked } from "@/scripts/games/shared_moves/manageGame";
 import { Color } from "@/scripts/types/types";
+import { GameContext } from "@/src/match/Board";
 import { ChallengeContext } from "@/src/match/screens/match_tabs/challenges/ChallengesTab";
 import { ChallengeBody } from "@/src/match/screens/match_tabs/challenges/UI/ChallengePopup";
 import Button from "@/src/userInterface/CustomButton";
@@ -24,12 +26,14 @@ export function ChallengeCard(props: { teamColor: Color; challenge: Challenge; c
 
 export function ClaimButton(props: {title: string}){
 	const {open, setCurrentChallenge} = useContext(ChallengeContext)
+	const { G } = useContext(GameContext)
+	const paused = G.pausedAt !== undefined
 	return(
 			<Button onClick={() => {
 				setCurrentChallenge(props.title)
 				open()
-				}} w="100%">
-				Complete and claim
+				}} w="100%" disabled={actionsLocked(G)}>
+				{paused ? "Game paused" : "Complete and claim"}
 			</Button>
 
 	)

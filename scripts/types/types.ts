@@ -3,7 +3,7 @@ import { Ctx, DefaultPluginAPIs, LobbyAPI } from 'boardgame.io';
 import { BoardProps } from 'boardgame.io/react';
 import { LineString } from 'geojson';
 import { Dispatch, JSX, ReactElement, SetStateAction } from 'react';
-import { cities } from '../consts';
+import { cities, CUSTOM_CITY } from '../consts';
 import { SnakeGameState } from '@/scripts/games/snake/types';
 import { PolyData, LineData } from '@/scripts/types/googleMaps';
 import { ConnectFourGameState } from '@/scripts/games/connect_four/types';
@@ -19,10 +19,22 @@ export type GameStateUniversal = {
 	gameOver: boolean;
 	startTime?: number;
 	endTime?: number;
+	// Set while an admin has paused the game; the timer is frozen at this moment.
+	pausedAt?: number;
 	gameStateLogs: GameStateLog<GameStateUniversal>[]
 	active: boolean;
 	teamPhotoURLs: {[key in MatchTeamString] : string}
 	victory?: MatchTeamColor
+	// Challenge evidence uploaded in the background after a claim, keyed by the
+	// evidenceId stored in that claim's log metadata.
+	evidenceUploads?: Record<string, EvidenceUpload>
+}
+
+export type EvidenceUpload = {
+	status: "uploading" | "done" | "failed";
+	playerID: string;
+	fileTypes: string[];
+	urls: string[];
 }
 
 export type GameStateGeneric = ConnectFourGameState | SnakeGameState
@@ -33,7 +45,14 @@ export interface GameStateAnything extends GameStateUniversal, Partial<Omit<Game
 export type MoveContext<SomeGameState extends GameStateUniversal> = DefaultPluginAPIs & { G: SomeGameState; ctx: Ctx; playerID: string };
 
 
-export type GameStateLog<GameState extends GameStateUniversal> = Omit<GameState, "gameStateLogs">
+// Undo snapshots stored in gameStateLogs. We omit gameStateLogs itself (no
+// nesting) plus fields that are fixed at setup() and never change during play
+// (MatchMapData, challengeDeck) — those are restored from the live state on
+// undo instead of being copied into every snapshot. evidenceUploads is also
+// kept live so undo never discards media that finished uploading later. Omit
+// ignores keys that a given game state doesn't have (e.g. Snake has no
+// MatchMapData).
+export type GameStateLog<GameState extends GameStateUniversal> = Omit<GameState, "gameStateLogs" | "MatchMapData" | "challengeDeck" | "evidenceUploads">
 
 export type AllPlayersData = {
 	[key:string] : PlayerData
@@ -68,6 +87,13 @@ export interface MapData {
 
 export type City = typeof cities[number];
 
+export type CustomCity = typeof CUSTOM_CITY;
+
+// Anywhere a match can be played: one of the built-in cities, or a player-supplied
+// Google My Maps map. Keyed lookups into `maps`/`gameLocationCenters` only accept
+// `City`, so narrow before indexing them.
+export type CityOrCustom = City | CustomCity;
+
 export type GameSetupDataGeneric = {
 	gameName: string,
 	winter: boolean,
@@ -75,7 +101,15 @@ export type GameSetupDataGeneric = {
 }
 
 export interface MatchMapData extends MapData {
-	city : City;
+	city : CityOrCustom;
+	// Name to show players. Built-in cities use their entry in `maps`; custom maps
+	// use the title from the KML document.
+	mapName?: string;
+	// Google My Maps id the KML came from. Only set for custom maps.
+	customMapId?: string;
+	// Where to point the camera. Optional because matches created before custom
+	// maps existed have no centre stored — use `matchMapCenter()` to read it.
+	center?: google.maps.LatLngLiteral;
 }
 
 export type ClientSetupData = {
@@ -98,12 +132,15 @@ export type GameBoardContext = BoardProps<GameStateGeneric> & ClientSetupData
 export type LogMetadata = {
 	date?: string;
 	evidence?: string[];
+	evidenceId?: string;
 	challenge?: string;
 	zone?: number;
 	zoneName?: string;
 	team: Color;
 	claimType?: "lock" | "claim" | "steal";
 	stealFrom?: Color;
+	// Set on the claim that completed the winning line.
+	victory?: MatchTeamColor;
 	growth?: number
 	chatText?: string;
 }
@@ -127,6 +164,7 @@ export type LocationResult = {
 }
 
 export type LocationData = {
+	matchID: string,
 	teamName: MatchTeamColor,
 	playerID: string,
 	timestamp: number,

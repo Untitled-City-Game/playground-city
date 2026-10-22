@@ -3,10 +3,10 @@ import { ConnectFourMoves } from "@/scripts/games/connect_four/connect_four";
 import { ConnectFourGameState } from "@/scripts/games/connect_four/types";
 import { SnakeGameState } from "@/scripts/games/snake/types";
 import { GameBoardContext, GameBoardContextSpecific, GameStateGeneric, LocationData, LocationResult, PlayerData } from "@/scripts/types/types";
-import GameOver from "@/src/lobby/GameOver";
 import useMyLocation from "@/src/match/interfaces/useMyLocation";
 import useTeamLocations from "@/src/match/interfaces/useTeamLocations";
 import Loading from "@/src/match/screens/game_status/Loading";
+import OtherTeamClaimModal from "@/src/match/screens/game_status/OtherTeamClaimModal";
 import VictoryModal from "@/src/match/screens/game_status/VictoryModal";
 import Waiting from "@/src/match/screens/game_status/Waiting";
 import TabSet from "@/src/match/screens/match_tabs/TabSet";
@@ -47,10 +47,6 @@ function Board(props: GameBoardContext) {
         }
     }, [playerID, moves, playerData, props.G.allPlayersData]);
 
-    if (props.G.gameOver) {
-        return <GameOver />;
-    }
-
     if (!playerID) {
         navigate("/lobby");
     }
@@ -75,7 +71,7 @@ function Board(props: GameBoardContext) {
         <GameContext.Provider value={contextValue}>
             <ErrorBoundary
                 FallbackComponent={ErrorDialog}>
-                <OtherTeamsContextWrapper>
+                <OtherTeamsContextWrapper matchID={props.matchID}>
                     <LocationRefContextWrapper>
                         <MatchContext G={props.G}>
                             <MatchGameplay G={props.G} playerData={props.playerData.data} />
@@ -125,6 +121,7 @@ function ConnectFourGameplay(G: ConnectFourGameState, playerData: PlayerData) {
             <StatusBar>
                 {claimedZones} neighbourhood{claimedZones === 1 ? "" : "s"} claimed
                 <VictoryModal />
+                <OtherTeamClaimModal />
             </StatusBar>
             <TabSet tabCodes={["challenges", "connect_four_map", "log"]} />
         </>
@@ -157,8 +154,8 @@ function SnakeGameplay(G: SnakeGameState, playerData: PlayerData) {
 
 export const OtherTeamsContext = createContext<LocationData[]>([])
 
-function OtherTeamsContextWrapper({ children }: { children: React.ReactNode }) {
-    const data = useTeamLocations()
+function OtherTeamsContextWrapper({ children, matchID }: { children: React.ReactNode, matchID: string }) {
+    const data = useTeamLocations(matchID)
     return (
         <OtherTeamsContext.Provider value={data}>
             {children}

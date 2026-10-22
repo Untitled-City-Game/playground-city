@@ -16,7 +16,7 @@ type PolygonLabelProps = {
 }
 export default function PolygonLabel(props: PolygonLabelProps) {
     const { label, position, zoom, color, locked, selected, disabled, handleClick } = props;
-    const zoomThreshold = 14;
+    const zoomThreshold = 15;
     if (zoom > zoomThreshold) {
         return null;
     }

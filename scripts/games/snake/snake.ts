@@ -27,12 +27,10 @@ export type PlayStateMoves_Snake = StripContext<typeof playStateMoves_Snake>;
 
 export const Snake: Game<SnakeGameState> = {
 	name: `snake`,
+	// Undo is handled by the customUndo move + gameStateLogs; disable the
+	// engine's built-in undo stack so it doesn't snapshot full G every move.
+	disableUndo: true,
 	setup: ({ ctx }, setupData : SnakeGameSetupData) => snakeGameSetup(ctx, setupData),
-	endIf: ({ G }) => {
-		console.log("gameover check", G.gameOver);
-		return G.gameOver ? "Game ended" : null;
-	},
-	
 	moves: {
 		startGame : (args: any) => startGame<SnakeGameState>(args),
 		playerSetup: snakePlayerSetup,

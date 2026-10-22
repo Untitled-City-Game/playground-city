@@ -16,6 +16,11 @@ export const cities = [
     "nyc"
 ] as const;
 
+// Sentinel "city" for a map the player supplied themselves via a Google My Maps
+// link. It has no entry in `maps` or `gameLocationCenters` — its KML id and
+// centre travel on the MatchMapData instead.
+export const CUSTOM_CITY = "custom";
+
 export const maps = {
     melbourne: {
         name: "Melbourne",
@@ -82,7 +87,7 @@ export const games = [
     {
         name: "Snake",
         code: "snake",
-        active: false,
+        active: true,
         playerMin: 4,
         playerMax: 8,
         description: "Collect the fruit to grow your snake. Wrap around the other team to win!",

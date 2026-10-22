@@ -1,7 +1,7 @@
 import Span from "@/src/userInterface/Span";
 import { FallbackProps } from "react-error-boundary";
 import { useDisclosure } from '@mantine/hooks';
-import { Accordion,  Code, Collapse, Modal } from '@mantine/core';
+import { Accordion, Anchor, Code, Collapse, Modal } from '@mantine/core';
 import P from '@/src/userInterface/P';
 import Button from "@/src/userInterface/CustomButton";
 export default function ErrorDialog({ error, resetErrorBoundary } : {error: Error, resetErrorBoundary : () => void}){
@@ -15,7 +15,9 @@ export default function ErrorDialog({ error, resetErrorBoundary } : {error: Erro
 			       <Collapse in={stack}>
 					<P><Code>{error.stack}</Code></P>
 				</Collapse>
-			
+			{process.env.BUG_REPORT ?
+				<P><Anchor href={process.env.BUG_REPORT} target="_blank" rel="noopener noreferrer">Report a bug</Anchor></P>
+				: null}
       	</Modal>
 
 	)

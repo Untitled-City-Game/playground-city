@@ -1,4 +1,5 @@
 import { ConnectFourMoves } from "@/scripts/games/connect_four/connect_four";
+import { actionsLocked } from "@/scripts/games/shared_moves/manageGame";
 import { ChallengeDeckContext, ConnectFourContext, GameContext } from "@/src/match/Board";
 import ClaimFlowModal from "@/src/match/components/regions/region_claim_flow/ClaimFlowModal";
 import useMyLocation from "@/src/match/interfaces/useMyLocation";
@@ -13,7 +14,7 @@ import P from "@/src/userInterface/P";
 import Span from "@/src/userInterface/Span";
 import { Box, Container, Stack, Group,  ScrollAreaAutosize, Accordion, ScrollArea, Flex, Divider, useMantineTheme } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { FaLock } from "react-icons/fa";
 
 
@@ -26,7 +27,8 @@ export default function ChallengesTab({ active }: { active: string | null }) {
 	const { allPlayersData } = props.G;
 	const playerData = allPlayersData[props.playerData.data.playerID];
 	const myTeam = playerData.teamColor;
-	const challengeHand = allTeamsChallengeData[myTeam]?.challengeHand;
+	// endGame empties hands, but matches ended before that change still hold cards.
+	const challengeHand = props.G.gameOver ? [] : allTeamsChallengeData[myTeam]?.challengeHand;
 	const challengeDeck = allTeamsChallengeData[myTeam]?.challengeDeck;
 	const [opened, { open, close }] = useDisclosure(false);
 	const [currentChallenge, setCurrentChallenge] = useState("");
@@ -41,9 +43,20 @@ export default function ChallengesTab({ active }: { active: string | null }) {
 
 	const { setTabAlertState } = useContext(TabAlertsContext)
 
+	// G is replaced on every server update, so challengeHand always has a new
+	// reference. Compare titles to detect actual draws and ignore re-renders
+	// caused by unrelated state changes.
+	const previousHandTitles = useRef<string[] | undefined>(undefined);
 	useEffect(() => {
-		console.log("challenge hand changed");
-		setTabAlertState(oldValues => { return { ...oldValues, "challenges": true } });
+		const currentTitles = challengeHand?.map(c => c.title) ?? [];
+		const previous = previousHandTitles.current;
+		previousHandTitles.current = currentTitles;
+		if (previous === undefined) return; // first render — don't fire
+		const previousSet = new Set(previous);
+		const hasNew = currentTitles.some(title => !previousSet.has(title));
+		if (hasNew) {
+			setTabAlertState(oldValues => ({ ...oldValues, "challenges": true }));
+		}
 	}, [challengeHand]);
 
 	useEffect(() => {
@@ -63,9 +76,10 @@ export default function ChallengesTab({ active }: { active: string | null }) {
 								<Span fz="sm">
 									{challengeDeck.length} challenges in deck
 								</Span>
-								<ConfirmButton action={handleDiscardHand} description="discard all your challenges" display="inline-block" size="xs">
-									Discard Hand
-								</ConfirmButton>
+								{actionsLocked(props.G) ? null :
+									<ConfirmButton action={handleDiscardHand} description="discard all your challenges" display="inline-block" size="xs">
+										Discard Hand
+									</ConfirmButton>}
 							</Group>
 						</Stack>
 					</Container>

@@ -1,10 +1,11 @@
 import { LogMetadata } from "@/scripts/types/types";
 import ImageMantine from "@/src/userInterface/ImageMantine";
-import { Box, Stack } from "@mantine/core";
-import ReactPlayer from "react-player";
+import { Box, Group, Loader, Stack } from "@mantine/core";
 import P from "@/src/userInterface/P";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import getMime from "@/scripts/helpers/mime";
+import { GameContext } from "@/src/match/Board";
+import { ShareEvidenceButton } from "@/src/match/screens/match_tabs/game_log/messages/ShareEvidenceButton";
 const DEBUG = true;
 
 export function ClaimChallengeCompleted({ metadata }: { metadata: LogMetadata; }) {
@@ -31,10 +32,15 @@ type EvidenceMime = {
 } | undefined
 
 export function ChallengeEvidence({ metadata, myMessage }: { metadata: LogMetadata; myMessage?: boolean }) {
+	const { G } = useContext(GameContext);
+	// Newer claims reference a background upload in G; older entries (and
+	// Snake) carry the URLs directly in the log metadata.
+	const upload = metadata.evidenceId ? G.evidenceUploads?.[metadata.evidenceId] : undefined;
+	const evidenceUrls = upload ? upload.urls : metadata.evidence ?? [];
 	const [evidenceMime, setEvidenceMime] = useState<EvidenceMime[]>([])
 		useEffect(() => {
-			metadata.evidence ? findEvidenceType(metadata.evidence) : null
-		}, [metadata])
+			findEvidenceType(evidenceUrls)
+		}, [evidenceUrls.join()])
 
 	async function findEvidenceType(evidence : string[]){
 		const mimedEvidence : Array<EvidenceMime>= await Promise.all(evidence.map(async imageLink => {
@@ -57,30 +63,43 @@ export function ChallengeEvidence({ metadata, myMessage }: { metadata: LogMetada
 		
 		DEBUG && console.warn("my message?", myMessage)
 		
+		const mime = `${fileCategory}/${fileType}`;
+		const shareTitle = `${metadata.team} team: ${metadata.challenge}`;
+		const shareButton = <ShareEvidenceButton link={link} mime={mime} title={shareTitle} />;
 		if (fileCategory === "image") {
 			return (
-				<ImageMantine
-					style={{
-						borderRadius: "10px",
-					}}
-					key={link}
-					src={link}
-					alt={`${metadata.team} team completed challenge ${metadata.challenge} to claim zone ${metadata.zone}`}
-					w="min(80%, 300px)"
-					mb="4px"
-				/>
+				<EvidenceRow key={link} myMessage={myMessage} shareButton={shareButton}>
+					<ImageMantine
+						style={{
+							borderRadius: "10px",
+							// Mantine's Image sets flex: 0, which collapses it to
+							// zero width in a flex row; size it by width instead.
+							flex: "none",
+						}}
+						src={link}
+						alt={`${metadata.team} team completed challenge ${metadata.challenge} to claim zone ${metadata.zone}`}
+						w="min(80%, 300px)"
+					/>
+				</EvidenceRow>
 			);
 		}
 		if(fileCategory === "video"){
+			// Fixed width like a message bubble; height: auto keeps the video's own
+			// aspect ratio, so there's no letterboxing.
 			return (
-				<>
-					{/* <video style={{maxWidth: "min(80%, 300px)", marginBottom: "4px"}} controls>
-						<source src={imageLink} type={fileMime as string} />
-					</video> */}
-					<Box>
-					<ReactPlayer width={"300px"} url={link} controls />
-					</Box>
-					</>
+				<EvidenceRow key={link} myMessage={myMessage} shareButton={shareButton}>
+					<video
+						src={link}
+						controls
+						preload="metadata"
+						style={{
+							display: "block",
+							width: "80%",
+							height: "auto",
+							borderRadius: "10px",
+						}}
+					/>
+				</EvidenceRow>
 			);
 		}
 		return (
@@ -89,10 +108,47 @@ export function ChallengeEvidence({ metadata, myMessage }: { metadata: LogMetada
 		</Box>)
 	});
 
+	const failedCount = upload?.status === "failed" ? upload.fileTypes.length - upload.urls.length : 0;
+
 	return (
 		<Stack align={myMessage ? "flex-end" : "flex-start"} justify={myMessage ? "flex-end" : "flex-start"}>
-			{metadata.evidence && evidenceImages}
+			{upload?.status === "uploading"
+				? upload.fileTypes.map((fileType, index) => <EvidencePlaceholder key={index} fileType={fileType} />)
+				: evidenceImages}
+			{failedCount > 0 ? <P c="dimmed" fz="sm">{failedCount} file{failedCount === 1 ? "" : "s"} failed to upload</P> : null}
 		</Stack>
 	)
 
+}
+
+
+// Media with its share button beside it, vertically centred, on the side away
+// from the edge the message is aligned to (like WhatsApp's forward button).
+function EvidenceRow({ myMessage, shareButton, children }: { myMessage?: boolean; shareButton: React.ReactNode; children: React.ReactNode }) {
+	return (
+		<Group w="100%" gap="xs" mb="4px" wrap="nowrap" align="center" justify={myMessage ? "flex-end" : "flex-start"}>
+			{myMessage ? shareButton : null}
+			{children}
+			{myMessage ? null : shareButton}
+		</Group>
+	);
+}
+
+function EvidencePlaceholder({ fileType }: { fileType: string }) {
+	const kind = fileType.startsWith("video") ? "video" : "photo";
+	return (
+		<Stack
+			w="min(80%, 300px)"
+			h="170px"
+			mb="4px"
+			bg="gray.1"
+			align="center"
+			justify="center"
+			gap="xs"
+			style={{ borderRadius: "10px" }}
+		>
+			<Loader size="sm" color="gray" />
+			<P c="dimmed" fz="sm" pb={0}>Uploading {kind}…</P>
+		</Stack>
+	);
 }

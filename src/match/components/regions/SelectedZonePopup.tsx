@@ -1,4 +1,5 @@
 import { ZoneData } from "@/scripts/games/connect_four/types";
+import { actionsLocked } from "@/scripts/games/shared_moves/manageGame";
 import { LineData } from "@/scripts/types/googleMaps";
 import { ConnectFourContext, GameContext } from "@/src/match/Board";
 import ClaimFlowModal, { isZoneDisabled } from "@/src/match/components/regions/region_claim_flow/ClaimFlowModal";
@@ -7,7 +8,7 @@ import P from "@/src/userInterface/P";
 import Span from "@/src/userInterface/Span";
 import { Box, Center, CloseButton, Container, Flex, Group, Stack, useMantineTheme } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import React, { Dispatch, SetStateAction, useContext, useEffect, useState } from "react";
+import React, { Dispatch, SetStateAction, useContext, useEffect } from "react";
 import { FaArrowCircleLeft, FaArrowCircleRight, FaCircle, FaGripLinesVertical, FaRegCircle } from "react-icons/fa";
 
 export default function SelectedZonePopup({
@@ -33,24 +34,14 @@ export default function SelectedZonePopup({
         setCurrentZone(undefined);
         setActiveLine(undefined);
     }
-    const [lineIndex, setLineIndex] = useState(0);
+    // Derived from activeLine rather than held in state, so it stays in sync
+    // when the parent resets activeLine on a zone change.
+    const lineIndex = Math.max(0, lines.findIndex(line => activeLine && isSameLine(line, activeLine)));
     function nextLine() {
-        if (lineIndex >= lines.length - 1) {
-            setLineIndex(0)
-            setActiveLine(lines[0])
-        } else {
-            setLineIndex(lineIndex + 1);
-            setActiveLine(lines[lineIndex + 1])
-        }
+        setActiveLine(lines[(lineIndex + 1) % lines.length])
     }
     function prevLine() {
-        if (lineIndex == 0) {
-            setLineIndex(lines.length - 1)
-            setActiveLine(lines[lines.length - 1])
-        } else {
-            setLineIndex(lineIndex - 1);
-            setActiveLine(lines[lineIndex - 1])
-        }
+        setActiveLine(lines[(lineIndex - 1 + lines.length) % lines.length])
     }
     useEffect(() => {
         if (activeLine === undefined) { setActiveLine(lines[0]); }
@@ -58,61 +49,51 @@ export default function SelectedZonePopup({
     const ownerColor = currentZone?.controlTeam ? theme.colors[currentZone.controlTeam][5] : undefined
     return (
         <>
-            <div style={{
-                pointerEvents: "none",
-                position: "absolute",
-                top: "0",
-                zIndex: "999",
-                display: currentZone ? "flex" : "none",
-                gap: "5px",
-                flexWrap: "nowrap",
-                width: "100%",
-                height: "100%",
-                justifyContent: "space-between",
-                alignItems: "center",
-                opacity: "80%"
-            }}>
+            <div
+                style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    zIndex: 1,
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    backgroundColor: "white",
+                    borderBottom: `3px solid ${theme.colors.actionColor[5]}`,
+                    padding: "0.25rem 0.5rem",
+                    transform: currentZone ? "translateY(0)" : "translateY(-100%)",
+                    transition: "transform 200ms ease",
+                    pointerEvents: currentZone ? "auto" : "none",
+                }}
+            >
                 <button
                     onClick={prevLine}
-                    style={{
-
-                        pointerEvents: "all",
-                        flexGrow: "1",
-                        maxWidth: "15vw",
-                        height: "30%",
-                        padding: "1rem",
-                        border: "2px solid",
-                        borderColor: `${theme.colors.violet[8]}`,
-                        borderLeft: "none",
-                        backgroundColor: `${theme.colors.violet[3]}`
-                    }}>
+                    style={lineNavButtonStyles(theme.colors.violet[8])}
+                    aria-label="Previous line"
+                >
                     <FaArrowCircleLeft size="2rem" />
                 </button>
-                <div></div>
+                <Span size="sm">
+                    {lines.length > 0 ? `Line ${lineIndex + 1} of ${lines.length}` : "No lines"}
+                </Span>
                 <button
                     onClick={nextLine}
-                    style={{
-                        pointerEvents: "all",
-                        flexGrow: "1",
-                        maxWidth: "15vw",
-                        height: "30%",
-                        padding: "1rem",
-                        border: "2px solid",
-                        borderColor: `${theme.colors.violet[8]}`,
-                        borderRight: "none",
-                        backgroundColor: `${theme.colors.violet[3]}`
-                    }}>
+                    style={lineNavButtonStyles(theme.colors.violet[8])}
+                    aria-label="Next line"
+                >
                     <FaArrowCircleRight size="2rem" />
                 </button>
-
             </div>
 
             <Center
                 style={{
                     borderTop: `3px solid ${ownerColor || theme.colors.actionColor[5]}`,
-                    ...selectedZonePopupStyles
+                    ...selectedZonePopupStyles,
+                    transform: currentZone ? "translateY(0)" : "translateY(100%)",
+                    transition: "transform 200ms ease",
+                    pointerEvents: currentZone ? "auto" : "none",
                 }}
-                display={currentZone ? "initial" : "none"}
             >
 
 
@@ -148,7 +129,13 @@ export default function SelectedZonePopup({
                                         "Unclaimed"
                                 }</Span>
                         </P>
-                        {disabled ?
+                        {G.gameOver ?
+                            <P>
+                                The game has ended.
+                            </P> : G.pausedAt !== undefined ?
+                            <P>
+                                The game is paused.
+                            </P> : disabled ?
                             <P>
                                 You can't claim the starting neighbourhood first.
                             </P> : null}
@@ -157,7 +144,7 @@ export default function SelectedZonePopup({
                             onClick={() => {
                                 open();
                                 deselect();
-                            }} size="m" disabled={currentZone?.locked || disabled}>
+                            }} size="m" disabled={currentZone?.locked || disabled || actionsLocked(G)}>
                             <span>{currentZone?.controlTeam === null ? "Claim" : currentZone?.controlTeam === props.playerData.data.teamColor ? "Lock" : "Steal"}</span>
                         </Button>
                     </Stack>
@@ -181,3 +168,19 @@ const selectedZonePopupStyles: React.CSSProperties = {
     textAlign: "center",
     padding: "0.5rem 1rem",
 };
+
+// Match by content, not identity: synced game state can hand us fresh objects,
+// and line names from KML aren't guaranteed unique.
+function isSameLine(a: LineData, b: LineData) {
+    return a === b || (a.featureName === b.featureName && a.matchedPolygons.join() === b.matchedPolygons.join());
+}
+
+const lineNavButtonStyles = (color: string): React.CSSProperties => ({
+    background: "none",
+    border: "none",
+    padding: "0.25rem 0.5rem",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    color,
+});

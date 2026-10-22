@@ -6,7 +6,7 @@ import Button from "@/src/userInterface/CustomButton";
 import DashedCard from "@/src/userInterface/DashedCard";
 import P from "@/src/userInterface/P";
 import Span from "@/src/userInterface/Span";
-import { Box,  Divider, Modal, Stack } from "@mantine/core";
+import { Box,  Divider, Modal, Stack, useMantineTheme } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { FaExternalLinkSquareAlt, FaLock } from "react-icons/fa";
 
@@ -67,11 +67,12 @@ export function ChallengeButton({
 }
 
 export function ChallengeBody({challenge, teamColor} : {challenge: Challenge, teamColor: string}) {
+	const theme = useMantineTheme();
 	return (<div>
 		<Divider color={teamColor} />
 		<div style={{ marginTop: "0.5rem" }}>
 			{challenge.hard ? <>
-				<FaLock color={teamColor} />
+				<FaLock color={theme.colors[teamColor]?.[8] ?? teamColor} />
 				<Span fz="0.9rem"> This challenge can lock or steal a zone</Span></> : null}
 		</div>
 		<div>{challenge.description.split("\n").map((line, index) => <p key={index}>{line}</p>)}</div>

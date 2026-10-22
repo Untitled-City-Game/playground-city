@@ -2,6 +2,8 @@ import { LogMetadata, PlayerData, GameStateGeneric, GameBoardContextSpecific, Ga
 import { ClaimChallengeCompleted, ChallengeEvidence, FruitEaten } from "@/src/match/screens/match_tabs/game_log/messages/ChallengeCompleted";
 import { ChatMessage } from "@/src/match/screens/match_tabs/game_log/messages/ChatMessage";
 import { DiscardHand } from "@/src/match/screens/match_tabs/game_log/messages/DiscardHand";
+import { GameEnded, GameEndedInfo } from "@/src/match/screens/match_tabs/game_log/messages/GameEnded";
+import { GamePaused } from "@/src/match/screens/match_tabs/game_log/messages/GamePaused";
 import { GameStarted } from "@/src/match/screens/match_tabs/game_log/messages/GameStarted";
 import { JoinedMatch } from "@/src/match/screens/match_tabs/game_log/messages/JoinedMatch";
 import { MessageBox, MessageContainer, MessageWrapper } from "@/src/match/screens/match_tabs/game_log/MessageBox";
@@ -11,6 +13,7 @@ import { Avatar, Box } from "@mantine/core";
 import { LogEntry } from "boardgame.io";
 import { useContext } from "react";
 import { GameContext } from "@/src/match/Board";
+import { VictoryMessage } from "@/src/match/screens/game_status/VictoryModal";
 
 
 export function Message({ entry, gameData, playerData }: { entry: LogEntry; gameData: GameStateGeneric; playerData: PlayerData; }) {
@@ -31,6 +34,16 @@ export function Message({ entry, gameData, playerData }: { entry: LogEntry; game
 							/>
 							: null}
 					</MessageBox>
+					{entry.metadata.victory ?
+						<MessageBox entry={entry} gameData={gameData} playerData={playerData} gameMessage={true}>
+							<VictoryMessage team={entry.metadata.victory} />
+						</MessageBox>
+						: null}
+					{entry.metadata.victory ?
+						<MessageBox entry={entry} gameData={gameData} playerData={playerData} gameMessage={true}>
+							<GameEndedInfo />
+						</MessageBox>
+						: null}
 				</>
 			);
 
@@ -45,6 +58,19 @@ export function Message({ entry, gameData, playerData }: { entry: LogEntry; game
 			return (
 				<MessageBox entry={entry} gameData={gameData} playerData={playerData} gameMessage={true}>
 					<GameStarted senderData={senderData} />
+				</MessageBox>
+			);
+		case "endGame":
+			return (
+				<MessageBox entry={entry} gameData={gameData} playerData={playerData} gameMessage={true}>
+					<GameEnded senderData={senderData} />
+				</MessageBox>
+			);
+		case "pauseGame":
+		case "unpauseGame":
+			return (
+				<MessageBox entry={entry} gameData={gameData} playerData={playerData} gameMessage={true}>
+					<GamePaused senderData={senderData} paused={entry.action.payload.type === "pauseGame"} />
 				</MessageBox>
 			);
 		case "sendChatMessage":

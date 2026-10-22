@@ -8,13 +8,15 @@ import { challengeDeckPlayerSetup } from "@/scripts/games/challenge_deck/challen
 import { baseGameState } from "@/scripts/games/shared_moves/baseGameState";
 
 export function ConnectFourGameSetup(ctx: Ctx, setupData: ConnectFourGameSetupData): ConnectFourGameState {
+	console.log("ConnectFourGameSetup - startingZone:", setupData.startingZone, "challengeData rows:", setupData.challengeData?.length);
 	return {
 		...baseGameState("connect_four", setupData.gameName),
 		zoneData: createBoardFromMapJson(setupData.mapSetupData.zonePolygons),
 		MatchMapData: setupData.mapSetupData,
-		challengeDeck: createChallengeDeck(setupData.mapSetupData.city, setupData.winter, setupData.money),
+		challengeDeck: createChallengeDeck(setupData.challengeData, setupData.winter, setupData.money),
 		allTeamsChallengeData: {},
 		city: setupData.mapSetupData.city,
+		startingZone: setupData.startingZone,
 	};
 }
 
