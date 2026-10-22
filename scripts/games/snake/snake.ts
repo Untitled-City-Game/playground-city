@@ -31,11 +31,6 @@ export const Snake: Game<SnakeGameState> = {
 	// engine's built-in undo stack so it doesn't snapshot full G every move.
 	disableUndo: true,
 	setup: ({ ctx }, setupData : SnakeGameSetupData) => snakeGameSetup(ctx, setupData),
-	endIf: ({ G }) => {
-		console.log("gameover check", G.gameOver);
-		return G.gameOver ? "Game ended" : null;
-	},
-	
 	moves: {
 		startGame : (args: any) => startGame<SnakeGameState>(args),
 		playerSetup: snakePlayerSetup,

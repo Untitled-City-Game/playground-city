@@ -1,6 +1,6 @@
 import { gameTimeMinutes } from "@/scripts/consts";
 import { createUndoPoint } from "@/scripts/games/undo";
-import { GameStateUniversal, MoveContext } from "@/scripts/types/types";
+import { GameStateAnything, GameStateUniversal, MoveContext } from "@/scripts/types/types";
 import { addLogMetadata } from "./metadata";
 
 export function startGame<GameState extends GameStateUniversal>(context: MoveContext<GameState>) {
@@ -23,9 +23,20 @@ export function startGameTimer<SomeGameState extends GameStateUniversal>(G: Some
 	G.endTime = startTime + gameTimeMinutes * 60 * 1000;
 }
 
-export function endGame({ G, log }: MoveContext<GameStateUniversal>) {
+export function endGame({ G, log, playerID }: MoveContext<GameStateUniversal>) {
+	if (G.gameOver) return "INVALID_MOVE";
 	console.log("ending game");
-	log.setMetadata("game end");
 	G.gameOver = true;
+	// The match stays live after it ends (so the map and log remain usable), but
+	// with empty hands there's nothing left to complete or claim with.
+	const { allTeamsChallengeData } = G as GameStateAnything;
+	for (const teamData of Object.values(allTeamsChallengeData ?? {})) {
+		teamData.challengeDiscard.push(...teamData.challengeHand);
+		teamData.challengeHand = [];
+	}
+	addLogMetadata(
+		{ log },
+		{ team: G.allPlayersData[playerID].teamColor }
+	);
 }
 

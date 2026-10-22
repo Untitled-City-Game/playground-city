@@ -53,12 +53,12 @@ export function SettingsModal({
 			<p><strong>Invite code: </strong>{props.matchID}</p>
 			<Stack>
 			<GameInviteButton gameCode={props.gameCode} matchID={props.matchID} />
-			{props.playerData.data.admin ?
+			{props.playerData.data.admin && !props.G.gameOver ?
 				<ConfirmButton variant="outline" description="undo" action={() => props.moves.customUndo()}>
 					Undo last action
 				</ConfirmButton>
 				: null}
-			{props.playerData.data.admin ? <ConfirmButton action={handleEndGame} description="end the game">End Game</ConfirmButton> : null}
+			{props.playerData.data.admin && !props.G.gameOver ? <ConfirmButton action={handleEndGame} description="end the game">End Game</ConfirmButton> : null}
 			{process.env.BUG_REPORT ?
 				<Anchor href={process.env.BUG_REPORT} target="_blank" rel="noopener noreferrer" size="sm" c="dimmed">
 					Report a bug

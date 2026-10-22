@@ -3,6 +3,10 @@ import { MoveContext, GameStateUniversal, GameStateLog, GameStateAnything } from
 export default function customUndoTemplate<T extends GameStateUniversal>(context: MoveContext<T>): T | "INVALID_MOVE" {
 	console.log("custom undo activated");
 	let G = context.G;
+	if(G.gameOver){
+		console.log("Can't undo, game has ended")
+		return "INVALID_MOVE";
+	}
 	const gameStateLogs = G.gameStateLogs;
 	if(gameStateLogs.length <= 1){
 		console.log("Can't undo, no history")

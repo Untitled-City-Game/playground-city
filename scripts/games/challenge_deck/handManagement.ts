@@ -78,8 +78,8 @@ export function discardHand(context: MoveContext<ChallengeGameGameState>) {
 	const team = G.allPlayersData[playerID].teamColor;
 	const teamData = G.allTeamsChallengeData[team];
 	
-	//Don't discard if 0 challenges left
-	if(teamData.challengeDeck.length === 0){
+	//Don't discard if 0 challenges left, or after the game has ended
+	if(teamData.challengeDeck.length === 0 || G.gameOver){
 		return "INVALID_MOVE"
 	}
 	

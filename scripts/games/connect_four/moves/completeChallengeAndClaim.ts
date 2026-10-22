@@ -17,6 +17,7 @@ export function completeChallengeAndClaim(
 	fileTypes: string[] = []
 ) {
 	const { G, log, playerID } = context;
+	if (G.gameOver) return "INVALID_MOVE";
 	const challengeInfo = G.challengeDeck.find(challengeInfo => challengeInfo.title === challenge);
 	if (challengeInfo === undefined) {
 		throw new Error(`Challenge ${challenge} not found`);
@@ -93,6 +94,7 @@ export function completeChallenge(
 	challenge: string,
 	evidenceId?: string
 ) {
+	if (G.gameOver) return "INVALID_MOVE";
 	discardChallenge({ G, log, playerID }, challenge);
 	addLogMetadata(
 		{ log },

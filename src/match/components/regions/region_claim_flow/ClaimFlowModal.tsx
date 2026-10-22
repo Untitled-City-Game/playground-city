@@ -21,7 +21,7 @@ import { useContext, useEffect } from "react";
 const claimFormValues = {
 	zone: "",
 	challenge: "",
-	evidence: "",
+	evidence: [] as File[],
 }
 export type ClaimFormValues = typeof claimFormValues;
 
@@ -98,7 +98,7 @@ export default function ClaimFlowModal({
 	function handleSubmit(values: ClaimFormValues) {
 		const moves = props.moves as ConnectFourMoves
 		// Evidence uploads in the background, so there's nothing to wait for.
-		claimZone(props.playerData.data.playerID, moves, Number(values.zone), values.challenge, values.evidence as unknown as File[]);
+		claimZone(props.playerData.data.playerID, moves, Number(values.zone), values.challenge, values.evidence);
 		closeClaim();
 	}
 

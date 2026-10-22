@@ -3,7 +3,6 @@ import { ConnectFourMoves } from "@/scripts/games/connect_four/connect_four";
 import { ConnectFourGameState } from "@/scripts/games/connect_four/types";
 import { SnakeGameState } from "@/scripts/games/snake/types";
 import { GameBoardContext, GameBoardContextSpecific, GameStateGeneric, LocationData, LocationResult, PlayerData } from "@/scripts/types/types";
-import GameOver from "@/src/lobby/GameOver";
 import useMyLocation from "@/src/match/interfaces/useMyLocation";
 import useTeamLocations from "@/src/match/interfaces/useTeamLocations";
 import Loading from "@/src/match/screens/game_status/Loading";
@@ -47,10 +46,6 @@ function Board(props: GameBoardContext) {
             moves.playerSetup(playerData.data);
         }
     }, [playerID, moves, playerData, props.G.allPlayersData]);
-
-    if (props.G.gameOver) {
-        return <GameOver />;
-    }
 
     if (!playerID) {
         navigate("/lobby");

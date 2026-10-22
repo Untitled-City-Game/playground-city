@@ -2,6 +2,7 @@ import { LogMetadata, PlayerData, GameStateGeneric, GameBoardContextSpecific, Ga
 import { ClaimChallengeCompleted, ChallengeEvidence, FruitEaten } from "@/src/match/screens/match_tabs/game_log/messages/ChallengeCompleted";
 import { ChatMessage } from "@/src/match/screens/match_tabs/game_log/messages/ChatMessage";
 import { DiscardHand } from "@/src/match/screens/match_tabs/game_log/messages/DiscardHand";
+import { GameEnded } from "@/src/match/screens/match_tabs/game_log/messages/GameEnded";
 import { GameStarted } from "@/src/match/screens/match_tabs/game_log/messages/GameStarted";
 import { JoinedMatch } from "@/src/match/screens/match_tabs/game_log/messages/JoinedMatch";
 import { MessageBox, MessageContainer, MessageWrapper } from "@/src/match/screens/match_tabs/game_log/MessageBox";
@@ -45,6 +46,12 @@ export function Message({ entry, gameData, playerData }: { entry: LogEntry; game
 			return (
 				<MessageBox entry={entry} gameData={gameData} playerData={playerData} gameMessage={true}>
 					<GameStarted senderData={senderData} />
+				</MessageBox>
+			);
+		case "endGame":
+			return (
+				<MessageBox entry={entry} gameData={gameData} playerData={playerData} gameMessage={true}>
+					<GameEnded senderData={senderData} />
 				</MessageBox>
 			);
 		case "sendChatMessage":

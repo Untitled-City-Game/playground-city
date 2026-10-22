@@ -128,7 +128,10 @@ export default function SelectedZonePopup({
                                         "Unclaimed"
                                 }</Span>
                         </P>
-                        {disabled ?
+                        {G.gameOver ?
+                            <P>
+                                The game has ended.
+                            </P> : disabled ?
                             <P>
                                 You can't claim the starting neighbourhood first.
                             </P> : null}
@@ -137,7 +140,7 @@ export default function SelectedZonePopup({
                             onClick={() => {
                                 open();
                                 deselect();
-                            }} size="m" disabled={currentZone?.locked || disabled}>
+                            }} size="m" disabled={currentZone?.locked || disabled || G.gameOver}>
                             <span>{currentZone?.controlTeam === null ? "Claim" : currentZone?.controlTeam === props.playerData.data.teamColor ? "Lock" : "Steal"}</span>
                         </Button>
                     </Stack>

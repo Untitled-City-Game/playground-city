@@ -26,7 +26,8 @@ export default function ChallengesTab({ active }: { active: string | null }) {
 	const { allPlayersData } = props.G;
 	const playerData = allPlayersData[props.playerData.data.playerID];
 	const myTeam = playerData.teamColor;
-	const challengeHand = allTeamsChallengeData[myTeam]?.challengeHand;
+	// endGame empties hands, but matches ended before that change still hold cards.
+	const challengeHand = props.G.gameOver ? [] : allTeamsChallengeData[myTeam]?.challengeHand;
 	const challengeDeck = allTeamsChallengeData[myTeam]?.challengeDeck;
 	const [opened, { open, close }] = useDisclosure(false);
 	const [currentChallenge, setCurrentChallenge] = useState("");
@@ -74,9 +75,10 @@ export default function ChallengesTab({ active }: { active: string | null }) {
 								<Span fz="sm">
 									{challengeDeck.length} challenges in deck
 								</Span>
-								<ConfirmButton action={handleDiscardHand} description="discard all your challenges" display="inline-block" size="xs">
-									Discard Hand
-								</ConfirmButton>
+								{props.G.gameOver ? null :
+									<ConfirmButton action={handleDiscardHand} description="discard all your challenges" display="inline-block" size="xs">
+										Discard Hand
+									</ConfirmButton>}
 							</Group>
 						</Stack>
 					</Container>

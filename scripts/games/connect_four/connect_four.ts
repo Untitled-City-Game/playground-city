@@ -40,12 +40,6 @@ export const ConnectFour: Game<ConnectFourGameState> = {
 	//set up game board using map json info
 	// validateSetupData: (data) => isGameSetupData(data),
 	setup: ({ ctx }, setupData : ConnectFourGameSetupData) => ConnectFourGameSetup(ctx, setupData),
-	endIf: ({ G }) => {
-		return G.gameOver ? "Game ended" : null;
-	},
-	onEnd: () => {
-		console.log("on end");
-	},
 	moves: {
 		startGame : (args: any) => startGame<ConnectFourGameState>(args),
 		playerSetup: connectFourPlayerSetup
