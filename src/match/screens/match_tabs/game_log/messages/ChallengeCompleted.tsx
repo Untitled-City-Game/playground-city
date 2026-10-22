@@ -72,6 +72,9 @@ export function ChallengeEvidence({ metadata, myMessage }: { metadata: LogMetada
 					<ImageMantine
 						style={{
 							borderRadius: "10px",
+							// Mantine's Image sets flex: 0, which collapses it to
+							// zero width in a flex row; size it by width instead.
+							flex: "none",
 						}}
 						src={link}
 						alt={`${metadata.team} team completed challenge ${metadata.challenge} to claim zone ${metadata.zone}`}
