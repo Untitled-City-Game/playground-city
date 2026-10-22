@@ -2,6 +2,7 @@ import { games } from "@/scripts/consts";
 import { SharedMoves } from "@/scripts/games/shared_moves/sharedMoves";
 import { GameContext } from "@/src/match/Board";
 import { GameInviteButton } from "@/src/match/screens/game_status/Waiting";
+import Button from "@/src/userInterface/CustomButton";
 import ConfirmButton from "@/src/userInterface/ConfirmModal";
 import P from "@/src/userInterface/P";
 import { Anchor, Center, Group, Modal, Stack, UnstyledButton } from "@mantine/core";
@@ -57,6 +58,11 @@ export function SettingsModal({
 				<ConfirmButton variant="outline" description="undo" action={() => props.moves.customUndo()}>
 					Undo last action
 				</ConfirmButton>
+				: null}
+			{props.playerData.data.admin && props.G.pausedAt !== undefined ?
+				<Button variant="outline" onClick={() => moves.unpauseGame()}>Resume game</Button>
+				: props.playerData.data.admin && !props.G.gameOver ?
+				<Button variant="outline" onClick={() => moves.pauseGame()}>Pause game</Button>
 				: null}
 			{props.playerData.data.admin && !props.G.gameOver ? <ConfirmButton action={handleEndGame} description="end the game">End Game</ConfirmButton> : null}
 			{process.env.BUG_REPORT ?

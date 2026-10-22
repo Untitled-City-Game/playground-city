@@ -19,6 +19,8 @@ export type GameStateUniversal = {
 	gameOver: boolean;
 	startTime?: number;
 	endTime?: number;
+	// Set while an admin has paused the game; the timer is frozen at this moment.
+	pausedAt?: number;
 	gameStateLogs: GameStateLog<GameStateUniversal>[]
 	active: boolean;
 	teamPhotoURLs: {[key in MatchTeamString] : string}

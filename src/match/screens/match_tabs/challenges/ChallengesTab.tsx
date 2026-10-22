@@ -1,4 +1,5 @@
 import { ConnectFourMoves } from "@/scripts/games/connect_four/connect_four";
+import { actionsLocked } from "@/scripts/games/shared_moves/manageGame";
 import { ChallengeDeckContext, ConnectFourContext, GameContext } from "@/src/match/Board";
 import ClaimFlowModal from "@/src/match/components/regions/region_claim_flow/ClaimFlowModal";
 import useMyLocation from "@/src/match/interfaces/useMyLocation";
@@ -75,7 +76,7 @@ export default function ChallengesTab({ active }: { active: string | null }) {
 								<Span fz="sm">
 									{challengeDeck.length} challenges in deck
 								</Span>
-								{props.G.gameOver ? null :
+								{actionsLocked(props.G) ? null :
 									<ConfirmButton action={handleDiscardHand} description="discard all your challenges" display="inline-block" size="xs">
 										Discard Hand
 									</ConfirmButton>}

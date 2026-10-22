@@ -33,6 +33,32 @@ export function endGame({ G, log, playerID }: MoveContext<GameStateUniversal>) {
 	);
 }
 
+export function pauseGame({ G, log, playerID }: MoveContext<GameStateUniversal>) {
+	if (!G.active || G.gameOver || G.pausedAt !== undefined) return "INVALID_MOVE";
+	G.pausedAt = Date.now();
+	addLogMetadata(
+		{ log },
+		{ team: G.allPlayersData[playerID].teamColor }
+	);
+}
+
+export function unpauseGame({ G, log, playerID }: MoveContext<GameStateUniversal>) {
+	if (G.pausedAt === undefined) return "INVALID_MOVE";
+	// Push the end back by however long the game was paused.
+	if (G.endTime !== undefined) G.endTime += Date.now() - G.pausedAt;
+	delete G.pausedAt;
+	addLogMetadata(
+		{ log },
+		{ team: G.allPlayersData[playerID].teamColor }
+	);
+}
+
+// Game actions (claims, challenges, discards) are blocked once the game has
+// ended or while it's paused. Chat and admin controls stay available.
+export function actionsLocked(G: GameStateUniversal) {
+	return G.gameOver || G.pausedAt !== undefined;
+}
+
 // Shared by the endGame move and a winning claim.
 export function finishGame(G: GameStateUniversal) {
 	console.log("ending game");

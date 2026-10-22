@@ -1,5 +1,6 @@
 import { Challenge, ChallengeGameGameState, RawChallenge, TeamChallengeData } from "@/scripts/games/challenge_deck/challenge_deck_types";
 import { handSize } from "@/scripts/games/connect_four/connect_four";
+import { actionsLocked } from "@/scripts/games/shared_moves/manageGame";
 import { addLogMetadata } from "@/scripts/games/shared_moves/metadata";
 import { createUndoPoint } from "@/scripts/games/undo";
 import { MatchTeamColor, MoveContext } from "@/scripts/types/types";
@@ -78,8 +79,8 @@ export function discardHand(context: MoveContext<ChallengeGameGameState>) {
 	const team = G.allPlayersData[playerID].teamColor;
 	const teamData = G.allTeamsChallengeData[team];
 	
-	//Don't discard if 0 challenges left, or after the game has ended
-	if(teamData.challengeDeck.length === 0 || G.gameOver){
+	//Don't discard if 0 challenges left, or while the game is paused or over
+	if(teamData.challengeDeck.length === 0 || actionsLocked(G)){
 		return "INVALID_MOVE"
 	}
 	

@@ -1,4 +1,5 @@
 import { ZoneData } from "@/scripts/games/connect_four/types";
+import { actionsLocked } from "@/scripts/games/shared_moves/manageGame";
 import { LineData } from "@/scripts/types/googleMaps";
 import { ConnectFourContext, GameContext } from "@/src/match/Board";
 import ClaimFlowModal, { isZoneDisabled } from "@/src/match/components/regions/region_claim_flow/ClaimFlowModal";
@@ -131,6 +132,9 @@ export default function SelectedZonePopup({
                         {G.gameOver ?
                             <P>
                                 The game has ended.
+                            </P> : G.pausedAt !== undefined ?
+                            <P>
+                                The game is paused.
                             </P> : disabled ?
                             <P>
                                 You can't claim the starting neighbourhood first.
@@ -140,7 +144,7 @@ export default function SelectedZonePopup({
                             onClick={() => {
                                 open();
                                 deselect();
-                            }} size="m" disabled={currentZone?.locked || disabled || G.gameOver}>
+                            }} size="m" disabled={currentZone?.locked || disabled || actionsLocked(G)}>
                             <span>{currentZone?.controlTeam === null ? "Claim" : currentZone?.controlTeam === props.playerData.data.teamColor ? "Lock" : "Steal"}</span>
                         </Button>
                     </Stack>

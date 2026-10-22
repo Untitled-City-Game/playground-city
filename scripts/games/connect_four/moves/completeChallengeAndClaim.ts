@@ -6,7 +6,7 @@ import { addLogMetadata } from "../../shared_moves/metadata";
 import { ConnectFourGameState } from "@/scripts/games/connect_four/types";
 import { Challenge } from "@/scripts/games/challenge_deck/challenge_deck_types";
 import { checkVictory } from "@/scripts/games/connect_four/checkVictory";
-import { finishGame } from "@/scripts/games/shared_moves/manageGame";
+import { actionsLocked, finishGame } from "@/scripts/games/shared_moves/manageGame";
 
 export function completeChallengeAndClaim(
 	context: MoveContext<ConnectFourGameState>,
@@ -18,7 +18,7 @@ export function completeChallengeAndClaim(
 	fileTypes: string[] = []
 ) {
 	const { G, log, playerID } = context;
-	if (G.gameOver) return "INVALID_MOVE";
+	if (actionsLocked(G)) return "INVALID_MOVE";
 	const challengeInfo = G.challengeDeck.find(challengeInfo => challengeInfo.title === challenge);
 	if (challengeInfo === undefined) {
 		throw new Error(`Challenge ${challenge} not found`);
@@ -100,7 +100,7 @@ export function completeChallenge(
 	challenge: string,
 	evidenceId?: string
 ) {
-	if (G.gameOver) return "INVALID_MOVE";
+	if (actionsLocked(G)) return "INVALID_MOVE";
 	discardChallenge({ G, log, playerID }, challenge);
 	addLogMetadata(
 		{ log },

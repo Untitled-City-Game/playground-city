@@ -18,10 +18,13 @@ export default function customUndoTemplate<T extends GameStateUniversal>(context
 	// fields that were unset at snapshot time (e.g. victory) are absent from
 	// it, so they would survive the undo.
 	// evidenceUploads is kept live too, so media that finished uploading after
-	// the snapshot isn't lost.
-	const { MatchMapData, challengeDeck, evidenceUploads } = G as GameStateAnything;
+	// the snapshot isn't lost. The pause state and timer are kept live so undo
+	// can't unpause the game or rewind the clock.
+	const { MatchMapData, challengeDeck, evidenceUploads, pausedAt, endTime } = G as GameStateAnything;
 	return {
 		...lastState,
+		pausedAt,
+		endTime,
 		...(MatchMapData !== undefined && { MatchMapData }),
 		...(challengeDeck !== undefined && { challengeDeck }),
 		...(evidenceUploads !== undefined && { evidenceUploads }),
