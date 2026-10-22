@@ -137,6 +137,8 @@ export type LogMetadata = {
 	team: Color;
 	claimType?: "lock" | "claim" | "steal";
 	stealFrom?: Color;
+	// Set on the claim that completed the winning line.
+	victory?: MatchTeamColor;
 	growth?: number
 	chatText?: string;
 }

@@ -25,6 +25,16 @@ export function startGameTimer<SomeGameState extends GameStateUniversal>(G: Some
 
 export function endGame({ G, log, playerID }: MoveContext<GameStateUniversal>) {
 	if (G.gameOver) return "INVALID_MOVE";
+	finishGame(G);
+	createUndoPoint(G);
+	addLogMetadata(
+		{ log },
+		{ team: G.allPlayersData[playerID].teamColor }
+	);
+}
+
+// Shared by the endGame move and a winning claim.
+export function finishGame(G: GameStateUniversal) {
 	console.log("ending game");
 	G.gameOver = true;
 	// The match stays live after it ends (so the map and log remain usable), but
@@ -34,9 +44,5 @@ export function endGame({ G, log, playerID }: MoveContext<GameStateUniversal>) {
 		teamData.challengeDiscard.push(...teamData.challengeHand);
 		teamData.challengeHand = [];
 	}
-	addLogMetadata(
-		{ log },
-		{ team: G.allPlayersData[playerID].teamColor }
-	);
 }
 

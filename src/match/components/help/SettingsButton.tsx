@@ -53,7 +53,7 @@ export function SettingsModal({
 			<p><strong>Invite code: </strong>{props.matchID}</p>
 			<Stack>
 			<GameInviteButton gameCode={props.gameCode} matchID={props.matchID} />
-			{props.playerData.data.admin && !props.G.gameOver ?
+			{props.playerData.data.admin ?
 				<ConfirmButton variant="outline" description="undo" action={() => props.moves.customUndo()}>
 					Undo last action
 				</ConfirmButton>

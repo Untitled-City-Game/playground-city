@@ -6,6 +6,7 @@ import { addLogMetadata } from "../../shared_moves/metadata";
 import { ConnectFourGameState } from "@/scripts/games/connect_four/types";
 import { Challenge } from "@/scripts/games/challenge_deck/challenge_deck_types";
 import { checkVictory } from "@/scripts/games/connect_four/checkVictory";
+import { finishGame } from "@/scripts/games/shared_moves/manageGame";
 
 export function completeChallengeAndClaim(
 	context: MoveContext<ConnectFourGameState>,
@@ -25,6 +26,7 @@ export function completeChallengeAndClaim(
 	// console.log("complete challenge and claim move found challenge ", challengeInfo);
 	const claimData = claimZone({ G, log, playerID }, zoneID, challengeInfo);
 	if(claimData === "INVALID_MOVE") return claimData;
+	const previousVictory = G.victory;
 	checkVictory(context);
 	if (evidenceId && fileTypes.length > 0) {
 		G.evidenceUploads ??= {};
@@ -32,6 +34,9 @@ export function completeChallengeAndClaim(
 	}
 	completeChallenge({ G, log, playerID }, challenge, evidenceId);
 	drawToFull(context);
+	const won = previousVictory === undefined && G.victory !== undefined;
+	// After the draw, so the winner's refilled hand is cleared too.
+	if (won) finishGame(G);
 	createUndoPoint(G);
 	addLogMetadata(
 		{ log },
@@ -41,6 +46,7 @@ export function completeChallengeAndClaim(
 			team: G.allPlayersData[playerID].teamColor,
 			challenge: challengeInfo.title,
 			evidenceId,
+			...(won && { victory: G.victory }),
 		}
 	);
 }
