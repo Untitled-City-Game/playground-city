@@ -49,12 +49,29 @@ export default function TransitOverlay({ bounds }: { bounds: Bounds | undefined 
 
 	useEffect(() => {
 		if (!map) return;
-		const deckOverlay = new GoogleMapsOverlay({ interleaved: true });
-		deckOverlay.setMap(map);
-		setOverlay(deckOverlay);
+		let deckOverlay: GoogleMapsOverlay | undefined;
+		function attach(map: google.maps.Map) {
+			deckOverlay = new GoogleMapsOverlay({ interleaved: true });
+			deckOverlay.setMap(map);
+			setOverlay(deckOverlay);
+		}
+		// deck.gl waits for an uninitialised map with a listener it never
+		// removes, so an overlay torn down early (e.g. StrictMode's remount)
+		// still attaches later with a null map and crashes. Wait here instead,
+		// where the listener can be cleaned up.
+		let listener: google.maps.MapsEventListener | undefined;
+		if (map.getRenderingType() === google.maps.RenderingType.UNINITIALIZED) {
+			listener = map.addListener("renderingtype_changed", () => {
+				listener?.remove();
+				attach(map);
+			});
+		} else {
+			attach(map);
+		}
 		return () => {
-			deckOverlay.setMap(null);
-			deckOverlay.finalize();
+			listener?.remove();
+			deckOverlay?.setMap(null);
+			deckOverlay?.finalize();
 			setOverlay(undefined);
 		};
 	}, [map]);

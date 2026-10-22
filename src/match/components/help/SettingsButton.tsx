@@ -3,7 +3,7 @@ import { SharedMoves } from "@/scripts/games/shared_moves/sharedMoves";
 import { GameContext } from "@/src/match/Board";
 import { GameInviteButton } from "@/src/match/screens/game_status/Waiting";
 import Button from "@/src/userInterface/CustomButton";
-import ConfirmButton from "@/src/userInterface/ConfirmModal";
+import ConfirmButton, { CloseWithConfirm } from "@/src/userInterface/ConfirmModal";
 import P from "@/src/userInterface/P";
 import { Anchor, Center, Group, Modal, Stack, UnstyledButton } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
@@ -50,6 +50,7 @@ export function SettingsModal({
 					Settings
 				</span>
 			}>
+			<CloseWithConfirm close={close}>
 			<P><strong>Host: </strong> {playerData[0]?.name}</P>
 			<p><strong>Invite code: </strong>{props.matchID}</p>
 			<Stack>
@@ -71,6 +72,7 @@ export function SettingsModal({
 				</Anchor>
 				: null}
 				</Stack>
+			</CloseWithConfirm>
 		</Modal>
 	);
 }
