@@ -14,3 +14,4 @@ server/db/
 package-lock.json
 fetchtest.js
 server/cache/
+game-logs/

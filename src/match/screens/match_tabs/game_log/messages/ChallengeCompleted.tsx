@@ -1,6 +1,6 @@
 import { LogMetadata } from "@/scripts/types/types";
 import ImageMantine from "@/src/userInterface/ImageMantine";
-import { Box, Group, Loader, Stack } from "@mantine/core";
+import { Anchor, Box, Group, Loader, Stack } from "@mantine/core";
 import P from "@/src/userInterface/P";
 import { useContext, useEffect, useState } from "react";
 import getMime from "@/scripts/helpers/mime";
@@ -69,16 +69,9 @@ export function ChallengeEvidence({ metadata, myMessage }: { metadata: LogMetada
 		if (fileCategory === "image") {
 			return (
 				<EvidenceRow key={link} myMessage={myMessage} shareButton={shareButton}>
-					<ImageMantine
-						style={{
-							borderRadius: "10px",
-							// Mantine's Image sets flex: 0, which collapses it to
-							// zero width in a flex row; size it by width instead.
-							flex: "none",
-						}}
-						src={link}
+					<EvidenceImage
+						link={link}
 						alt={`${metadata.team} team completed challenge ${metadata.challenge} to claim zone ${metadata.zone}`}
-						w="min(80%, 300px)"
 					/>
 				</EvidenceRow>
 			);
@@ -121,6 +114,33 @@ export function ChallengeEvidence({ metadata, myMessage }: { metadata: LogMetada
 
 }
 
+
+// Some formats (HEIF uploaded before conversion, or from a browser that
+// couldn't convert it) only display in Safari; elsewhere, offer a link.
+function EvidenceImage({ link, alt }: { link: string; alt: string }) {
+	const [failed, setFailed] = useState(false);
+	if (failed) {
+		return (
+			<Anchor href={link} target="_blank" rel="noopener noreferrer" fz="sm">
+				This browser can't show this photo. Open it
+			</Anchor>
+		);
+	}
+	return (
+		<ImageMantine
+			style={{
+				borderRadius: "10px",
+				// Mantine's Image sets flex: 0, which collapses it to
+				// zero width in a flex row; size it by width instead.
+				flex: "none",
+			}}
+			src={link}
+			alt={alt}
+			w="min(80%, 300px)"
+			onError={() => setFailed(true)}
+		/>
+	);
+}
 
 // Media with its share button beside it, vertically centred, on the side away
 // from the edge the message is aligned to (like WhatsApp's forward button).
