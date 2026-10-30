@@ -11,6 +11,11 @@ export default function RootLayout() {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Playground City</title>
+        <meta name="application-name" content="Playground City" />
+        <meta name="apple-mobile-web-app-title" content="Playground City" />
+        <meta property="og:site_name" content="Playground City" />
+        <meta property="og:title" content="Playground City" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Afacad:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet" />

@@ -2,7 +2,7 @@ import {  LoadingOverlay, Radio, Stack, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { LobbyAPI } from "boardgame.io";
 import { LobbyClient } from "boardgame.io/client";
-import { useNavigate, useParams } from "react-router";
+import { Navigate, useNavigate, useParams } from "react-router";
 
 import { games } from "@/scripts/consts";
 import { joinMatch } from "@/scripts/joinMatch";
@@ -15,6 +15,25 @@ import SafariWarning from "@/src/site/SafariWarning";
 import Button from "@/src/userInterface/CustomButton";
 
 export default function JoinMatch() {
+	const { matchID, gameCode } = useParams();
+	// Already in this match on this browser: skip the form and go straight back in
+	if (matchID && gameCode && isStoredMatch(matchID, gameCode)) {
+		return <Navigate to="/match" replace />;
+	}
+	return <JoinMatchForm />;
+}
+
+// The player saved by joining or creating a match, which /match plays as
+function isStoredMatch(matchID: string, gameCode: string) {
+	try {
+		const stored = JSON.parse(localStorage.getItem("localPlayerData") ?? "null") as PlayerData | null;
+		return stored?.matchID === matchID && stored?.gameCode === gameCode;
+	} catch {
+		return false;
+	}
+}
+
+function JoinMatchForm() {
 	const matchID = useParams().matchID;
 	const gameCode = useParams().gameCode;
 	const [loading, setLoading] = useState(false);
