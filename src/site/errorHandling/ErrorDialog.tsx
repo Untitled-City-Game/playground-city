@@ -1,13 +1,16 @@
 import Span from "@/src/userInterface/Span";
 import { FallbackProps } from "react-error-boundary";
 import { useDisclosure } from '@mantine/hooks';
-import { Accordion, Anchor, Code, Collapse, Modal } from '@mantine/core';
+import { Accordion, Anchor, Code, Collapse, MantineProvider, Modal } from '@mantine/core';
+import { theme } from "@/src/styles/theme";
 import P from '@/src/userInterface/P';
 import Button from "@/src/userInterface/CustomButton";
 export default function ErrorDialog({ error, resetErrorBoundary } : {error: Error, resetErrorBoundary : () => void}){
 	const [opened, { open, close }] = useDisclosure(true);
 	const [stack, { toggle }] = useDisclosure(false);
+	// Own provider: this can render above or outside every layout's MantineProvider
 	return (
+		<MantineProvider theme={theme}>
 		<Modal opened={opened} onClose={close} title={<h2>Something went wrong</h2>}>
 			<P><Code fw="bold">{error.name}</Code></P>
        		<P><Code>{error.message}</Code></P>
@@ -19,6 +22,6 @@ export default function ErrorDialog({ error, resetErrorBoundary } : {error: Erro
 				<P><Anchor href={process.env.BUG_REPORT} target="_blank" rel="noopener noreferrer">Report a bug</Anchor></P>
 				: null}
       	</Modal>
-
+		</MantineProvider>
 	)
 }

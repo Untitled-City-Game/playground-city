@@ -40,4 +40,5 @@ export type SnakeSegment = {lat: number, lng: number, timecode: number}
 export type SnakeGameSetupData = {
 	mapArea : MapAreaSelectorValue
 	gameName: string
+	gameTimeMinutes?: number
 }

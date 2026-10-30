@@ -16,6 +16,7 @@ import { GameContext } from "@/src/match/Board";
 import { VictoryMessage } from "@/src/match/screens/game_status/VictoryModal";
 
 
+// Keep visibleLogTypes.ts in sync with the cases this switch renders.
 export function Message({ entry, gameData, playerData }: { entry: LogEntry; gameData: GameStateGeneric; playerData: PlayerData; }) {
 	const senderData = gameData.allPlayersData[entry.action.payload.playerID];
 	const gameState: GameBoardContextSpecific<GameStateAnything> = useContext(GameContext);

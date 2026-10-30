@@ -12,6 +12,7 @@ import { useContext, useEffect, useState } from "react";
 import { GameContext } from "@/src/match/Board";
 import { ConnectFourGameState } from "@/scripts/games/connect_four/types";
 import { storage } from "@/scripts/firebase";
+import { ReviewContext } from "@/src/review/ReviewContext";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { ConnectFourMoves } from "@/scripts/games/connect_four/connect_four";
 import { SharedMoves } from "@/scripts/games/shared_moves/sharedMoves";
@@ -107,10 +108,12 @@ export function GameInviteButton({ gameCode, matchID, ...rest }: { gameCode: str
 
 function TeamFileUpload({ team }: { team: PlayerData[] }) {
     const props = useContext(GameContext);
+    const review = useContext(ReviewContext);
     const moves = props.moves as SharedMoves
     const gameData = props.G
     async function addTeamPhoto(payload: File | null) {
-        if (!payload) { return }
+        // Reviewing: don't upload anything
+        if (!payload || review) { return }
         const imageRef = ref(
             storage,
             `images/${gameData.gameName}/teampic${team[0].teamColor}${Date.now()}`

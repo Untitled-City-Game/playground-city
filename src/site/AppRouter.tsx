@@ -13,6 +13,9 @@ import CreateMatch from "@/src/lobby/CreateMatch/CreateMatch";
 import MatchClient from "@/src/match/Client";
 import NotificationTest from "@/src/site/NotificationTest";
 import ConnectFourDemo from "@/src/match/demo/ConnectFourDemo";
+import ReviewLayout from "@/src/review/ReviewLayout";
+import ReviewUpload from "@/src/review/ReviewUpload";
+import ReviewMatch from "@/src/review/ReviewMatch";
 
 export default function AppRouter(){
 	return (
@@ -26,6 +29,10 @@ export default function AppRouter(){
 					<Route path="map" element={<ExampleMap />} />
 				</Route>
 				<Route path="/match" element={<MatchClient />} />
+				<Route path="review" element={<ReviewLayout />}>
+					<Route index element={<ReviewUpload />} />
+					<Route path=":matchID" element={<ReviewMatch />} />
+				</Route>
 				<Route path="lobby" element={<LobbyLayout />}>
 					<Route path=":gameCode/join-match/:matchID" element={<JoinMatch />} />
 					<Route path=":gameCode/create-match" element={<CreateMatch />} />

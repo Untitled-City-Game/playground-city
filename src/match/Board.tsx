@@ -10,6 +10,7 @@ import OtherTeamClaimModal from "@/src/match/screens/game_status/OtherTeamClaimM
 import VictoryModal from "@/src/match/screens/game_status/VictoryModal";
 import Waiting from "@/src/match/screens/game_status/Waiting";
 import TabSet from "@/src/match/screens/match_tabs/TabSet";
+import { ReviewContext } from "@/src/review/ReviewContext";
 import ErrorDialog from "@/src/site/errorHandling/ErrorDialog";
 import StatusBar from "@/src/userInterface/StatusBar";
 import { createContext, RefObject, useContext, useEffect, useMemo, useRef } from "react";
@@ -33,7 +34,7 @@ function Board(props: GameBoardContext) {
     const playerData = props.playerData;
     let navigate = useNavigate();
 
-    const contextValue = useMemo(() => ({ ...props }), [props.G, props.playerID, props.moves, props.playerData, props.credentials]);
+    const contextValue = useMemo(() => ({ ...props }), [props.G, props.ctx, props.log, props.playerID, props.moves, props.playerData, props.credentials]);
 
     useEffect(() => {
         if (playerID && props.G.allPlayersData && !props.G.allPlayersData[playerID]) {
@@ -155,6 +156,14 @@ function SnakeGameplay(G: SnakeGameState, playerData: PlayerData) {
 export const OtherTeamsContext = createContext<LocationData[]>([])
 
 function OtherTeamsContextWrapper({ children, matchID }: { children: React.ReactNode, matchID: string }) {
+    // Reviewing a past match: no live locations, and no location server
+    if (useContext(ReviewContext)) {
+        return <OtherTeamsContext.Provider value={[]}>{children}</OtherTeamsContext.Provider>
+    }
+    return <LiveOtherTeams matchID={matchID}>{children}</LiveOtherTeams>
+}
+
+function LiveOtherTeams({ children, matchID }: { children: React.ReactNode, matchID: string }) {
     const data = useTeamLocations(matchID)
     return (
         <OtherTeamsContext.Provider value={data}>

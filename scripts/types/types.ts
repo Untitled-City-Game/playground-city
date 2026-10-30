@@ -3,7 +3,7 @@ import { Ctx, DefaultPluginAPIs, LobbyAPI } from 'boardgame.io';
 import { BoardProps } from 'boardgame.io/react';
 import { LineString } from 'geojson';
 import { Dispatch, JSX, ReactElement, SetStateAction } from 'react';
-import { cities, CUSTOM_CITY } from '../consts';
+import { AppEnv, cities, CUSTOM_CITY } from '../consts';
 import { SnakeGameState } from '@/scripts/games/snake/types';
 import { PolyData, LineData } from '@/scripts/types/googleMaps';
 import { ConnectFourGameState } from '@/scripts/games/connect_four/types';
@@ -19,6 +19,8 @@ export type GameStateUniversal = {
 	gameOver: boolean;
 	startTime?: number;
 	endTime?: number;
+	// Chosen at match creation. Missing for matches created before it existed.
+	gameTimeMinutes?: number;
 	// Set while an admin has paused the game; the timer is frozen at this moment.
 	pausedAt?: number;
 	gameStateLogs: GameStateLog<GameStateUniversal>[]
@@ -97,7 +99,8 @@ export type CityOrCustom = City | CustomCity;
 export type GameSetupDataGeneric = {
 	gameName: string,
 	winter: boolean,
-	money: boolean
+	money: boolean,
+	gameTimeMinutes?: number
 }
 
 export interface MatchMapData extends MapData {
@@ -148,12 +151,15 @@ export type LogMetadata = {
 export type GameMeta = {
     name: string;
     code: string;
-    active: boolean;
+    // Whether the game can be picked in each environment; see isGameEnabled
+    enabled: Record<AppEnv, boolean>;
     description: string;
     color: string;
     icon: IconType;
 	playerMin: number;
 	playerMax: number;
+	minTimeMinutes: number;
+	maxTimeMinutes: number;
 }
 
 export type LocationResult = {

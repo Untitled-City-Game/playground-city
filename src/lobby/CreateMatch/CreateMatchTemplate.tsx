@@ -1,8 +1,8 @@
-import { games } from "@/scripts/consts";
+import { clampGameTime, games } from "@/scripts/consts";
 import { CityOrCustom, NamedColor, PlayerData } from "@/scripts/types/types";
 import Loading from "@/src/match/screens/game_status/Loading";
 import Span from "@/src/userInterface/Span";
-import { Alert, Radio, Paper, Group, LoadingOverlay, Stack, TextInput, Checkbox, Stepper, StepperProps } from "@mantine/core";
+import { Alert, Radio, Paper, Group, LoadingOverlay, Stack, TextInput, NumberInput, Checkbox, Stepper, StepperProps } from "@mantine/core";
 import { hasLength, useForm, UseFormReturnType } from "@mantine/form";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router";
@@ -21,6 +21,9 @@ export type FormValues = {
     customMapLink?: string;
     winter?: boolean;
     money?: boolean;
+    // Number inputs give "" when empty
+    timeHours?: number | "";
+    timeMinutes?: number | "";
     [key: string]: any;
 };
 
@@ -61,7 +64,7 @@ export default function CreateMatchTemplate({
 
     const stepFields: string[][] = [
         firstStepFields ?? [],  // step 0: game-specific (children)
-        [],            // step 1: modes (toggles, no validation)
+        ["timeHours"],  // step 1: modes and time limit
         ["PlayerName"],
         ["teamColor"],
         ...(extraSteps?.map((s) => s.fields ?? []) ?? []),
@@ -101,6 +104,7 @@ export default function CreateMatchTemplate({
             const setupData = {
                 winter: values.winter ?? false,
                 money: values.money ?? false,
+                gameTimeMinutes: parseTime(values),
                 ...gameSetupData
             }
             console.log("creating game", values, setupData);
@@ -185,6 +189,32 @@ export default function CreateMatchTemplate({
                                     key={createGameForm.key("money")}
                                     {...createGameForm.getInputProps("money", { type: "checkbox" })}
                                 />
+                                <Stack gap={4}>
+                                    <Span fw="bold">Time limit</Span>
+                                    <Span fz="sm" c="dimmed">
+                                        Between {formatMinutes(game.minTimeMinutes)} and {formatMinutes(game.maxTimeMinutes)}
+                                    </Span>
+                                    <Group grow align="flex-start" wrap="nowrap">
+                                        <NumberInput
+                                            label="Hours"
+                                            min={0}
+                                            allowDecimal={false}
+                                            allowNegative={false}
+                                            key={createGameForm.key("timeHours")}
+                                            {...createGameForm.getInputProps("timeHours")}
+                                        />
+                                        <NumberInput
+                                            label="Minutes"
+                                            min={0}
+                                            max={59}
+                                            clampBehavior="strict"
+                                            allowDecimal={false}
+                                            allowNegative={false}
+                                            key={createGameForm.key("timeMinutes")}
+                                            {...createGameForm.getInputProps("timeMinutes")}
+                                        />
+                                    </Group>
+                                </Stack>
                             </>
                         )}
                         {step === 2 && (
@@ -239,7 +269,23 @@ function createTeamCards(teamOptions: string[]) {
 
 
 
-export function createGameFormConstructor(formValues: Record<string, any>, validators: Record<string, any>, teamOptions: string[]) {
+// Total minutes from the hours and minutes fields, or undefined if hours is
+// empty. Empty minutes count as 0.
+function parseTime(values: FormValues) {
+    const hours = values.timeHours;
+    if (hours === undefined || hours === "") return undefined;
+    return hours * 60 + (values.timeMinutes || 0);
+}
+
+function formatMinutes(total: number) {
+    const hours = Math.floor(total / 60);
+    const minutes = total % 60;
+    return minutes ? `${hours}h ${minutes}m` : `${hours}h`;
+}
+
+export function createGameFormConstructor(formValues: Record<string, any>, validators: Record<string, any>, teamOptions: string[], gameCode: string) {
+    const game = games.find(game => game.code === gameCode);
+    const defaultMinutes = clampGameTime(gameCode, undefined);
     return useForm({
         mode: "uncontrolled",
         initialValues: {
@@ -247,6 +293,8 @@ export function createGameFormConstructor(formValues: Record<string, any>, valid
             teamColor: "blue" as NamedColor,
             //numPlayers: numPlayers,
             gameName: "",
+            timeHours: Math.floor(defaultMinutes / 60),
+            timeMinutes: defaultMinutes % 60,
             ...formValues
         },
         validate: {
@@ -258,6 +306,16 @@ export function createGameFormConstructor(formValues: Record<string, any>, valid
                 teamOptions.map((option) => option).includes(teamColor)
                     ? null
                     : "Invalid team",
+            // The inputs only accept whole numbers (minutes 0-59), so all that's
+            // left to check is that hours is filled in and the total is in range
+            timeHours: (_value: number | "", values: FormValues) => {
+                const total = parseTime(values);
+                if (total === undefined) return "Enter the hours";
+                if (game && (total < game.minTimeMinutes || total > game.maxTimeMinutes)) {
+                    return `Must be between ${formatMinutes(game.minTimeMinutes)} and ${formatMinutes(game.maxTimeMinutes)}`;
+                }
+                return null;
+            },
             // gameName: hasLength(
             // 	{ min: 2, max: 20 },
             // 	"Game name must be between 2 and 20 characters"

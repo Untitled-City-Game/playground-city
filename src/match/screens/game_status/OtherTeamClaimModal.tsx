@@ -27,6 +27,9 @@ export default function OtherTeamClaimModal() {
     useEffect(() => {
         const victoryIsNew = props.G.victory !== undefined && lastSeenVictory.current === undefined;
         lastSeenVictory.current = props.G.victory;
+        // The log only shrinks when reviewing a match and stepping back; catch
+        // up so stepping forward again shows the popups again.
+        if (props.log.length < lastSeenLength.current) lastSeenLength.current = props.log.length;
         if (props.log.length <= lastSeenLength.current) return;
         const newEntries = props.log.slice(lastSeenLength.current);
         lastSeenLength.current = props.log.length;

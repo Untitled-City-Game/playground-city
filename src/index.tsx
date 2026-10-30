@@ -7,7 +7,7 @@ let container = document.getElementById("app")!;
 let root = createRoot(container)
 root.render(
   <StrictMode>
-    <ErrorBoundary fallbackRender={ErrorDialog}>
+    <ErrorBoundary FallbackComponent={ErrorDialog}>
       <AppRouter />
     </ErrorBoundary>
   </StrictMode>

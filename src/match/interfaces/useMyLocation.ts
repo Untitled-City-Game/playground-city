@@ -3,6 +3,7 @@ import { socket } from "@/scripts/socket";
 import { LocationData, LocationResult, MatchTeamColor } from "@/scripts/types/types";
 import useInterval from "@/scripts/useInterval";
 import { OtherTeamsContext } from "@/src/match/Board";
+import { ReviewContext } from "@/src/review/ReviewContext";
 import { AdvancedMarker } from "@vis.gl/react-google-maps";
 import { useContext, useEffect, useRef, useState } from "react";
 import { useGeolocated } from "react-geolocated";
@@ -13,6 +14,8 @@ export default function useMyLocation(initialPosition?: google.maps.LatLngLitera
 	const [accuracy, setAccuracy] = useState<number | undefined>(undefined);
 
 	const [invalid, setInvalid] = useState(false);
+	// Reviewing a past match: the viewer's own location is irrelevant
+	const review = useContext(ReviewContext);
 
 	const geoLocation = useGeolocated({
 		positionOptions: {
@@ -20,6 +23,7 @@ export default function useMyLocation(initialPosition?: google.maps.LatLngLitera
 		},
 		watchPosition: true,
 		userDecisionTimeout: 100000,
+		suppressLocationOnMount: review !== undefined,
 	});
 	const coords = geoLocation.coords;
 
@@ -49,6 +53,8 @@ export function useAndBroadcastMyLocation(teamName: MatchTeamColor, playerID: st
 	const [invalid, setInvalid] = useState(true)
 
 	const teamLocations = useContext(OtherTeamsContext)
+	// Never broadcast while reviewing: it would put the viewer into the real match
+	const review = useContext(ReviewContext);
 	
 	const geoLocation = useGeolocated({
 		positionOptions: {
@@ -56,9 +62,12 @@ export function useAndBroadcastMyLocation(teamName: MatchTeamColor, playerID: st
 		},
 		watchPosition: true,
 		userDecisionTimeout: 100000,
+		suppressLocationOnMount: review !== undefined,
 	});
 
 	function updateServer() {
+		if (review) return;
+		socket.connect();
 		const location_data = generateLocationData();
 		if (location_data !== null) {
 			socket.emit("locationUpdate", location_data);

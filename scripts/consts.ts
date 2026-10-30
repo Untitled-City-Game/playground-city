@@ -6,6 +6,15 @@ import { VscSnake } from "react-icons/vsc";
 export const EXPIRE_TIME = 5000;
 export const ACCURACY_MAX = 300;
 export const numPlayers = 6;
+export type AppEnv = "development" | "staging" | "production";
+// Which deployment this is, from APP_ENV in the env file. Anything missing or
+// unrecognised counts as production, the most restrictive.
+export const APP_ENV: AppEnv =
+    process.env.APP_ENV === "development" || process.env.APP_ENV === "staging"
+        ? process.env.APP_ENV
+        : "production";
+
+// Default time limit; each game sets its allowed range in `games` below.
 export const gameTimeMinutes = 180;
 // Limits how far the user can zoom out. Zoom 11 ≈ 50km across at mid-latitudes on a typical viewport.
 export const mapMinZoom = 11;
@@ -77,19 +86,23 @@ export const games = [
     {
         name: "Connect Four",
         code: "connect_four",
-        active: true,
+        enabled: { development: true, staging: true, production: true },
         description: "Connect four neighbourhoods in your city before the other team!",
         playerMin: 4,
         playerMax: 8,
+        minTimeMinutes: 120,
+        maxTimeMinutes: 300,
         color: "yellow",
         icon: MdGrid4X4
     },
     {
         name: "Snake",
         code: "snake",
-        active: true,
+        enabled: { development: true, staging: true, production: false },
         playerMin: 4,
         playerMax: 8,
+        minTimeMinutes: 120,
+        maxTimeMinutes: 300,
         description: "Collect the fruit to grow your snake. Wrap around the other team to win!",
         color: "green",
         icon: VscSnake
@@ -97,9 +110,11 @@ export const games = [
     {
         name: "Tag",
         code: "tag",
-        active: false,
+        enabled: { development: false, staging: false, production: false },
         playerMin: 6,
         playerMax: 30,
+        minTimeMinutes: 120,
+        maxTimeMinutes: 300,
         description: "Explore the city and dodge the taggers - or chase your friends!",
         color: "purple",
         icon: PiPersonSimpleRunBold
@@ -107,9 +122,11 @@ export const games = [
     {
         name: "Battleship",
         code: "battleship",
-        active: false,
+        enabled: { development: false, staging: false, production: false },
         playerMin: 4,
         playerMax: 8,
+        minTimeMinutes: 120,
+        maxTimeMinutes: 300,
         description: "Find and destroy the other team before they find you!",
         color: "water",
         icon: GiRadarSweep
@@ -122,3 +139,18 @@ export const games = [
 // 	lat:  45.529819917244254,
 // 	lng: -73.60361034602055,
 //   }
+
+// A match's time limit, kept within its game's range. Used when setting up a
+// match, since the requested time comes from the browser.
+export function clampGameTime(gameCode: string, minutes: number | undefined) {
+    const game = games.find(game => game.code === gameCode);
+    const requested = Number.isFinite(minutes) ? Math.round(minutes!) : gameTimeMinutes;
+    if (!game) return requested;
+    return Math.min(Math.max(requested, game.minTimeMinutes), game.maxTimeMinutes);
+}
+
+// Whether a game can be picked and new matches created in this environment.
+// Each game sets this per environment in `games` above.
+export function isGameEnabled(game: { enabled: Record<AppEnv, boolean> }) {
+    return game.enabled[APP_ENV];
+}

@@ -5,7 +5,7 @@ import { Ctx } from "boardgame.io";
 
 export function snakeGameSetup(ctx: Ctx, setupData: SnakeGameSetupData): SnakeGameState {
 	return {
-		...baseGameState("snake", setupData.gameName),
+		...baseGameState("snake", setupData.gameName, setupData.gameTimeMinutes),
 		fruits: spawnFruit([], setupData.mapArea),
 		snakeTeamData: {},
 		mapArea: setupData.mapArea,

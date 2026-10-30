@@ -117,7 +117,8 @@ export default function CreateMatchConnectFour() {
 					: "Paste a Google My Maps link (it should contain \"mid=\")",
 			startingZone: (value: string) => value ? null : "Pick a starting neighbourhood",
 		},
-		teamOptions
+		teamOptions,
+		"connect_four"
 	)
 
 	function handleCityChange(value: string | null) {

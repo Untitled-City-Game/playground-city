@@ -6,6 +6,7 @@ import { ChallengeDeckContext, ConnectFourContext, GameContext, LocationContext 
 import claimZone from "@/src/match/components/regions/region_claim_flow/claimZone";
 import { ModalHeader } from "@/src/match/components/regions/region_claim_flow/ui/ModalHeader";
 import { useMyZoneRef } from "@/src/match/interfaces/useMyZone";
+import { ReviewContext } from "@/src/review/ReviewContext";
 import Button from "@/src/userInterface/CustomButton";
 import {
 	
@@ -42,6 +43,7 @@ export default function ClaimFlowModal({
 }) {
 	DEBUG && console.warn("rendering claim flow modal");
 	const props: GameBoardContext = useContext(GameContext);
+	const review = useContext(ReviewContext);
 	
 	const { allTeamsChallengeData } = useContext(ChallengeDeckContext);
 	
@@ -96,6 +98,8 @@ export default function ClaimFlowModal({
 	const zoneSelectOptions = validZones(allZones, props.G)
 
 	function handleSubmit(values: ClaimFormValues) {
+		// Reviewing: nothing to claim, and evidence mustn't be uploaded
+		if (review) return closeClaim();
 		const moves = props.moves as ConnectFourMoves
 		// Evidence uploads in the background, so there's nothing to wait for.
 		claimZone(props.playerData.data.playerID, moves, Number(values.zone), values.challenge, values.evidence);
