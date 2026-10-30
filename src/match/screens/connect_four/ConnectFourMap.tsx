@@ -11,11 +11,14 @@ import MyLocationMarker from "@/src/match/googleMaps/MyLocationMarker";
 import { isStartZoneClaimable } from "@/src/match/components/regions/region_claim_flow/ClaimFlowModal";
 import { Polygon } from "@/src/match/googleMaps/shapes/Polygon";
 import TransitOverlay from "@/src/match/components/transit/LazyTransitOverlay";
+import { ReviewContext } from "@/src/review/ReviewContext";
 
 const DEBUG = false
 
 export default function ConnectFourMapTab() {
     const { playerData, matchID } = useContext(GameContext)
+    // Locations were never logged, so a review has no "you are here"
+    const review = useContext(ReviewContext);
     const G = useContext(ConnectFourContext);
     const [currentZone, setCurrentZone] = useState<ZoneData>();
     const [activeLine, setActiveLine] = useState<LineData | undefined>()
@@ -90,7 +93,7 @@ export default function ConnectFourMapTab() {
                     />
                     <>{zoneElements}</>
                     <TransitOverlay bounds={transitBounds} />
-                    <MyLocationMarker color={playerData.data.teamColor} defaultLocation={center} matchID={matchID} playerID={playerData.data.playerID} broadcast={true} />
+                    {review ? null : <MyLocationMarker color={playerData.data.teamColor} defaultLocation={center} matchID={matchID} playerID={playerData.data.playerID} broadcast={true} />}
                     <AllTeamMarkers teamName={playerData.data.teamColor} />
                 </VisGlMapElement>
             </div>

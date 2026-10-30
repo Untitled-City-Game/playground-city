@@ -39,16 +39,7 @@ export default function MatchClient() {
 	// Create match client
 	if (playerData) {
 		const GameClient = createGame(playerData)
-		const game : GameMeta | undefined = games.find((game) => game.code === playerData?.gameCode);
-		
-		const clientTheme = mergeMantineTheme(theme, {
-			primaryColor: game?.color,
-			colors: {
-				...theme.colors,
-				actionColor: game ? theme.colors[game.color] : theme.colors.actionColor,
-			}
-		});
-		
+		const clientTheme = matchTheme(playerData.gameCode);
 
 		return (
 			<MantineProvider theme={clientTheme}>
@@ -70,6 +61,18 @@ export default function MatchClient() {
 		console.log("no player data");
 		return <>No player data found.</>;
 	}
+}
+
+// The game's colour scheme, shared with the /review screen.
+export function matchTheme(gameCode: string | undefined) {
+	const game : GameMeta | undefined = games.find((game) => game.code === gameCode);
+	return mergeMantineTheme(theme, {
+		primaryColor: game?.color,
+		colors: {
+			...theme.colors,
+			actionColor: game ? theme.colors[game.color] : theme.colors.actionColor,
+		}
+	});
 }
 
 function createGame(playerData: PlayerData) {

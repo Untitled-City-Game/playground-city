@@ -10,7 +10,7 @@ import { baseGameState } from "@/scripts/games/shared_moves/baseGameState";
 export function ConnectFourGameSetup(ctx: Ctx, setupData: ConnectFourGameSetupData): ConnectFourGameState {
 	console.log("ConnectFourGameSetup - startingZone:", setupData.startingZone, "challengeData rows:", setupData.challengeData?.length);
 	return {
-		...baseGameState("connect_four", setupData.gameName),
+		...baseGameState("connect_four", setupData.gameName, setupData.gameTimeMinutes),
 		zoneData: createBoardFromMapJson(setupData.mapSetupData.zonePolygons),
 		MatchMapData: setupData.mapSetupData,
 		challengeDeck: createChallengeDeck(setupData.challengeData, setupData.winter, setupData.money),

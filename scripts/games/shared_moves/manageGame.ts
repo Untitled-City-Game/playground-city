@@ -20,7 +20,7 @@ export function startGame<GameState extends GameStateUniversal>(context: MoveCon
 export function startGameTimer<SomeGameState extends GameStateUniversal>(G: SomeGameState) {
 	const startTime = Date.now();
 	G.startTime = startTime;
-	G.endTime = startTime + gameTimeMinutes * 60 * 1000;
+	G.endTime = startTime + (G.gameTimeMinutes ?? gameTimeMinutes) * 60 * 1000;
 }
 
 export function endGame({ G, log, playerID }: MoveContext<GameStateUniversal>) {

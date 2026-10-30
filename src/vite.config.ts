@@ -12,6 +12,11 @@ export default defineConfig({
     allowedHosts: true
   },
   publicDir: '../static',
+  optimizeDeps: {
+    // Pre-bundle with everything else at startup. Found mid-session instead,
+    // Vite re-bundles and open tabs can end up with two copies of React.
+    include: ["boardgame.io/internal"],
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "../"),

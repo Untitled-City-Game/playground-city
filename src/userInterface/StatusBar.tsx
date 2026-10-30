@@ -7,19 +7,24 @@ import { useContext } from "react";
 import Countdown from 'react-countdown';
 import Span from "./Span";
 import { GameContext } from "@/src/match/Board";
+import { ReviewContext } from "@/src/review/ReviewContext";
 
 export default function StatusBar({ children }: { children?: React.ReactNode }) {
     const { G } = useContext(GameContext);
+    // Reviewing: the clock stands still at the time of the step shown
+    const review = useContext(ReviewContext);
     return (
         <Center style={statusBarStyles} className="header">
             <Group justify="center" align="center" wrap="nowrap">
                 <Span size="xs">{children}</Span>
                 {G.pausedAt !== undefined ?
                     <Span size="xs" fw="bold">Paused: {formatRemaining((G.endTime || 0) - G.pausedAt)} remaining</Span> :
+                    review ?
+                    <Span size="xs">{formatRemaining((G.endTime || 0) - review.now)} remaining</Span> :
                     <Span size="xs"><Countdown
                         date={new Date(G.endTime || 0)}
                         renderer={
-                            props => <span>{props.hours}h {props.minutes}m</span>
+                            props => <span>{formatRemaining(props.total)}</span>
                         }
                     /> remaining</Span>}
                 <HelpIcon />
@@ -30,10 +35,15 @@ export default function StatusBar({ children }: { children?: React.ReactNode }) 
     );
 }
 
-// Matches the Countdown renderer above, for showing the frozen timer.
+// Hours and minutes, or minutes and seconds in the last hour, e.g. "2h 15m"
+// or "42m 07s". Used by the live countdown and the paused/review timers.
 function formatRemaining(ms: number) {
-    const totalMinutes = Math.max(0, Math.floor(ms / 60000));
-    return `${Math.floor(totalMinutes / 60) % 24}h ${totalMinutes % 60}m`;
+    const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor(totalSeconds / 60) % 60;
+    if (hours > 0) return `${hours}h ${minutes}m`;
+    const seconds = String(totalSeconds % 60).padStart(2, "0");
+    return `${minutes}m ${seconds}s`;
 }
 
 const statusBarStyles = {

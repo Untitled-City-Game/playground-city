@@ -41,6 +41,7 @@ export default function useTeamLocations(matchID: string) {
 			});
 		}
 
+		socket.connect();
 		// Join immediately if the socket is already connected; otherwise the
 		// 'connect' handler will join (and re-join after any reconnect).
 		if (socket.connected) joinMatch();

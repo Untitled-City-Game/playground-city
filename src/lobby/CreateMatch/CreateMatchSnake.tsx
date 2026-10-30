@@ -19,7 +19,8 @@ export default function CreateMatchSnake() {
 		}
 		},
 		{}, 
-		teamOptions
+		teamOptions,
+		"snake"
 	)
 
 	interface SnakeFormValues extends FormValues {}
