@@ -6,7 +6,7 @@ import { useReviewFiles } from "@/src/review/ReviewLayout";
 import { MatchFiles, Replay, replayMatch, stepStateIndex } from "@/src/review/replay";
 import { Alert, Container, MantineProvider } from "@mantine/core";
 import type { BoardProps } from "boardgame.io/react";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Navigate, useNavigate, useParams, useSearchParams } from "react-router";
 
 // Every move is accepted and ignored: buttons look and respond as in a live
@@ -91,6 +91,24 @@ function ReviewView({ files, replay }: { files: MatchFiles; replay: Replay }) {
 		}, { replace: true });
 	}, [setSearchParams, step]);
 
+	// On unless the URL says ?popups=off
+	const claimPopups = searchParams.get("popups") !== "off";
+	const setClaimPopups = useCallback((show: boolean) => {
+		setSearchParams(params => {
+			if (show) params.delete("popups");
+			else params.set("popups", "off");
+			return params;
+		}, { replace: true });
+	}, [setSearchParams]);
+
+	// Draggable team markers. Kept here so positions survive stepping and
+	// switching tabs; reset when the page reloads.
+	const [teamMarkers, setTeamMarkers] = useState(false);
+	const [markerPositions, setMarkerPositions] = useState<Record<string, google.maps.LatLngLiteral>>({});
+	const moveMarker = useCallback((team: string, position: google.maps.LatLngLiteral) => {
+		setMarkerPositions(positions => ({ ...positions, [team]: position }));
+	}, []);
+
 	useStepKeys(step, lastStep, goTo);
 
 	const stateIndex = stepStateIndex(replay, step);
@@ -118,8 +136,16 @@ function ReviewView({ files, replay }: { files: MatchFiles; replay: Replay }) {
 		setPlayerID,
 		exit: () => navigate("/review"),
 		mismatch: replay.mismatch,
+		claimPopups,
+		setClaimPopups,
+		teamMarkers,
+		setTeamMarkers,
 	};
-	const review = useMemo(() => ({ now }), [now]);
+	const review = useMemo(() => ({
+		now,
+		claimPopups,
+		teamMarkers: { enabled: teamMarkers, positions: markerPositions, move: moveMarker },
+	}), [now, claimPopups, teamMarkers, markerPositions, moveMarker]);
 
 	const boardProps = {
 		G: state.G,

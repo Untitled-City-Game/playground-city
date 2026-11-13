@@ -8,6 +8,7 @@ import { ConnectFourContext, GameContext } from "@/src/match/Board";
 import AllTeamMarkers from "@/src/match/googleMaps/AllTeamMarkers";
 import { LineData } from "@/scripts/types/googleMaps";
 import MyLocationMarker from "@/src/match/googleMaps/MyLocationMarker";
+import ReviewTeamMarkers from "@/src/match/googleMaps/ReviewTeamMarkers";
 import { isStartZoneClaimable } from "@/src/match/components/regions/region_claim_flow/ClaimFlowModal";
 import { Polygon } from "@/src/match/googleMaps/shapes/Polygon";
 import TransitOverlay from "@/src/match/components/transit/LazyTransitOverlay";
@@ -95,6 +96,7 @@ export default function ConnectFourMapTab() {
                     <TransitOverlay bounds={transitBounds} />
                     {review ? null : <MyLocationMarker color={playerData.data.teamColor} defaultLocation={center} matchID={matchID} playerID={playerData.data.playerID} broadcast={true} />}
                     <AllTeamMarkers teamName={playerData.data.teamColor} />
+                    <ReviewTeamMarkers />
                 </VisGlMapElement>
             </div>
         </>

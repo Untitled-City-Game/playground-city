@@ -6,7 +6,7 @@ import Button from "@/src/userInterface/CustomButton";
 import ConfirmButton, { CloseWithConfirm } from "@/src/userInterface/ConfirmModal";
 import P from "@/src/userInterface/P";
 import { ReviewControlsContext } from "@/src/review/ReviewContext";
-import { ActionIcon, Alert, Anchor, Center, Divider, Group, Modal, Select, Stack, UnstyledButton } from "@mantine/core";
+import { ActionIcon, Alert, Anchor, Center, Divider, Group, Modal, Select, Stack, Switch, UnstyledButton } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useContext } from "react";
 import { BsFillGearFill } from "react-icons/bs";
@@ -84,7 +84,7 @@ export function SettingsModal({
 function ReviewSection() {
 	const review = useContext(ReviewControlsContext);
 	if (!review) return null;
-	const { step, stepCount, stepLabel, goTo, players, playerID, setPlayerID, exit, mismatch } = review;
+	const { step, stepCount, stepLabel, goTo, players, playerID, setPlayerID, exit, mismatch, claimPopups, setClaimPopups, teamMarkers, setTeamMarkers } = review;
 	const last = stepCount - 1;
 	return (
 		<Stack gap="xs" mb="md">
@@ -103,6 +103,18 @@ function ReviewSection() {
 				onChange={value => value && setPlayerID(value)}
 				allowDeselect={false}
 				comboboxProps={{ zIndex: 1000 }}
+			/>
+			<Switch
+				label="Show claim popups"
+				description="When another team claims a neighbourhood"
+				checked={claimPopups}
+				onChange={event => setClaimPopups(event.currentTarget.checked)}
+			/>
+			<Switch
+				label="Show team markers"
+				description="Team pins you can drag around the map. Real locations weren't recorded."
+				checked={teamMarkers}
+				onChange={event => setTeamMarkers(event.currentTarget.checked)}
 			/>
 			{mismatch ?
 				<Alert color="yellow" p="xs">

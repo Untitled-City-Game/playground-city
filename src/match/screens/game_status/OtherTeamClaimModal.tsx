@@ -1,6 +1,7 @@
 import { ConnectFourGameState } from "@/scripts/games/connect_four/types";
 import { LogMetadata } from "@/scripts/types/types";
 import { ConnectFourContext, GameContext } from "@/src/match/Board";
+import { ReviewContext } from "@/src/review/ReviewContext";
 import { ChallengeButton } from "@/src/match/screens/match_tabs/challenges/UI/ChallengePopup";
 import { ChallengeEvidence, ClaimChallengeCompleted } from "@/src/match/screens/match_tabs/game_log/messages/ChallengeCompleted";
 import P from "@/src/userInterface/P";
@@ -15,6 +16,7 @@ export default function OtherTeamClaimModal() {
     const props = useContext(GameContext);
     const G = useContext(ConnectFourContext) as ConnectFourGameState;
     const playerData = props.playerData.data;
+    const review = useContext(ReviewContext);
     // Start at current log length so existing entries on join don't pop up.
     const lastSeenLength = useRef(props.log.length);
     const [opened, { open, close }] = useDisclosure(false);
@@ -40,12 +42,17 @@ export default function OtherTeamClaimModal() {
             const senderTeam = props.G.allPlayersData[e.action.payload.playerID]?.teamColor;
             return senderTeam && senderTeam !== playerData.teamColor;
         });
-        if (claim) {
+        if (claim && review?.claimPopups !== false) {
             setEntry(claim);
             setWinningClaim(victoryIsNew && (claim.metadata as LogMetadata).team === props.G.victory);
             open();
         }
     }, [props.log, props.G.victory]);
+
+    // Switching popups off in review closes any that's showing
+    useEffect(() => {
+        if (review?.claimPopups === false) close();
+    }, [review?.claimPopups]);
 
     if (!entry) return null;
     const metadata = entry.metadata as LogMetadata;
